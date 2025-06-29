@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+  <body>
+    <p>Dear Supplier,</p>
+    <p>Please find below the list of equipment required for upcoming solar installation:</p>
+
+    <table border="1" cellpadding="6" cellspacing="0">
+      <thead>
+        <tr>
+          <th>Model</th>
+          <th>Quantity Needed</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for model, qty in shortfall.items() %}
+        <tr>
+          <td>{{ model }}</td>
+          <td>{{ qty }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <p>Kindly confirm availability and estimated delivery time.</p>
+    <p>Regards,<br/>Solar Installation Team</p>
+  </body>
+</html>
