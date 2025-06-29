@@ -4,7 +4,7 @@ sys.path.insert(0, str(repo_root))
 
 
 from agents import doc_extractor
-from core.schemas import DocumentExtractionResult
+from libs.core.schemas import DocumentExtractionResult
 
 
 SAMPLE_DOC_PATH = "data/Planset-3.pdf"

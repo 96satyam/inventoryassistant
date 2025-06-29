@@ -1,7 +1,7 @@
 # app_streamlit.py
 
 import streamlit as st
-from core.graph import build_pipeline  # Adjust import if core moved to libs
+from libs.core.graph import build_pipeline  
 import os
 
 # Config

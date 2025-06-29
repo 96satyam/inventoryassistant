@@ -4,7 +4,7 @@ import os, pathlib, sys, pytest
 repo_root = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(repo_root))
 
-from core.schemas import DocumentExtractionResult, EquipmentItem
+from libs.core.schemas import DocumentExtractionResult, EquipmentItem
 from agents.inventory_checker import check_inventory
 
 def test_inventory_shortfall():

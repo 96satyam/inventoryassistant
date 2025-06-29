@@ -8,8 +8,8 @@ import fitz  # PyMuPDF
 import pytesseract
 from pdf2image import convert_from_path
 
-from core.schemas import DocumentExtractionResult
-from core.utils import call_openai_prompt, DOC_EXTRACTION_PROMPT
+from libs.core.schemas import DocumentExtractionResult
+from libs.core.utils import call_openai_prompt, DOC_EXTRACTION_PROMPT
 
 
 def _extract_text_from_pdf(path: str) -> str:

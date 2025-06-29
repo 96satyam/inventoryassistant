@@ -1,6 +1,6 @@
 import pandas as pd
 from typing import Dict
-from core.schemas import DocumentExtractionResult
+from libs.core.schemas import DocumentExtractionResult
 import os
 import time
 from datetime import datetime
