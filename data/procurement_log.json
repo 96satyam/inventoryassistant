@@ -1,0 +1,136 @@
+[
+  {
+    "timestamp": "2025-07-02T10:11:49.331448",
+    "items": {
+      "HANWHA QCELL : Q.PEAK DUO BLK ML-GL10+410": 12,
+      "SOLAREDGE U650 POWER OPTIMIZER": 1
+    }
+  },
+  {
+    "timestamp": "2025-07-01T16:35:28.759564",
+    "items": {
+      "HANWHA QCELL : Q.PEAK DUO BLK ML-GL10+410": 11
+    }
+  },
+  {
+    "timestamp": "2025-07-01T06:00:25.160497",
+    "items": {
+      "Tesla Powerwall 3": 3
+    }
+  },
+  {
+    "timestamp": "2025-07-01T06:00:25.147395",
+    "items": {
+      "LG RESU 10H Prime": 5
+    }
+  },
+  {
+    "timestamp": "2025-07-01T06:00:25.134738",
+    "items": {
+      "Enphase IQ7+ / IQ7A Microinverters": 2
+    }
+  },
+  {
+    "timestamp": "2025-07-01T06:00:25.123704",
+    "items": {
+      "SolarEdge P-Series": 38,
+      "SOLAREDGE U650 POWER OPTIMIZER": 37,
+      "SolarEdge S-Series": 39,
+      "SolarEdge HD-Wave Inverter": 2,
+      "SOLAREDGE USE3800H-USMNBL75": 2,
+      "SolarEdge Home Hub Inverter": 1,
+      "SOLAREDGE ENERGY BANK BAT-10K1P": 3
+    }
+  },
+  {
+    "timestamp": "2025-07-01T06:00:25.110503",
+    "items": {
+      "Tigo TS4-A-S": 32,
+      "Tigo TS4-A-O": 24
+    }
+  },
+  {
+    "timestamp": "2025-07-01T06:00:25.096040",
+    "items": {
+      "Hanwa Qcell": 36,
+      "Q.TRON BLK M-G2": 41,
+      "Q.PEAK DUO XL-G9.2 Series": 25
+    }
+  },
+  {
+    "timestamp": "2025-07-01T06:00:25.084399",
+    "items": {
+      "Maxeon 7 Series": 50
+    }
+  },
+  {
+    "timestamp": "2025-07-01T06:00:25.083394",
+    "items": {
+      "TOPHiKu6 Series": 31
+    }
+  },
+  {
+    "timestamp": "2025-06-30T13:16:59.942084",
+    "items": {
+      "HANWHA QCELL : Q.PEAK DUO BLK ML-GL10+410": 12,
+      "SOLAREDGE U650 POWER OPTIMIZER": 1
+    }
+  },
+  {
+    "timestamp": "2025-06-30T13:04:45.492636",
+    "items": {
+      "HANWHA QCELL : Q.PEAK DUO BLK ML-GL10+410": 11,
+      "SOLAREDGE SOLAREDGE USE3800H-USMNBL75": 1
+    }
+  },
+  {
+    "timestamp": "2025-06-30T12:52:18.890037",
+    "items": {
+      "HANWHA QCELL Q.PEAK DUO BLK ML-GL10+410": 11
+    }
+  },
+  {
+    "timestamp": "2025-06-30T12:36:21.962909",
+    "items": {
+      "HANWHA QCELL Q.PEAK DUO BLK ML-GL10+410": 11
+    }
+  },
+  {
+    "timestamp": "2025-06-30T12:23:17.053770",
+    "items": {
+      "HANWHA QCELL : Q.PEAK DUO BLK ML-GL10+410": 11
+    }
+  },
+  {
+    "timestamp": "2025-06-30T12:03:11.502729",
+    "items": {
+      "HANWHA QCELL : Q.PEAK DUO BLK ML-GL10+410": 11
+    }
+  },
+  {
+    "timestamp": "2025-06-30T11:39:49.168270",
+    "items": {
+      "HANWHA QCELL : Q.PEAK DUO BLK ML-GL10+410": 11,
+      "SOLAREDGE SOLAREDGE USE3800H-USMNBL75": 1
+    }
+  },
+  {
+    "timestamp": "2025-06-30T11:36:58.501286",
+    "items": {
+      "HANWHA QCELL : Q.PEAK DUO BLK ML-GL10+410": 11
+    }
+  },
+  {
+    "timestamp": "2025-06-30T11:21:14.283111",
+    "items": {
+      "HANWHA QCELL : Q.PEAK DUO BLK ML-GL10+410": 11
+    }
+  },
+  {
+    "timestamp": "2025-06-30T11:16:05.795420",
+    "items": {
+      "HANWHA QCELL : Q.PEAK DUO BLK ML-GL10+410": 11,
+      "SOLAREDGE SOLAREDGE USE3800H-USMNBL75": 1
+    }
+  }
+]
