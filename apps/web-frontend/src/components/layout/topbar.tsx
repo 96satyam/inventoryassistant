@@ -14,10 +14,16 @@ import {
   Wifi,
   Database,
   Brain,
-  ChevronDown
+  ChevronDown,
+  ExternalLink,
+  Clock,
+  AlertTriangle,
+  Package,
+  ShoppingCart
 } from "lucide-react"
 import { useState, useEffect } from "react"
 import { useTheme } from "next-themes"
+import { useRouter, usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -27,6 +33,17 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  generateDashboardNotifications,
+  getNotificationCounts,
+  getPriorityColor,
+  getTypeIcon,
+  formatNotificationTime,
+  markAsRead,
+  markAllAsRead,
+  type NotificationItem
+} from "@/lib/notifications"
 
 interface TopbarProps {
   onSidebarToggle: () => void
@@ -36,12 +53,67 @@ export function Topbar({ onSidebarToggle }: TopbarProps) {
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
   const [currentTime, setCurrentTime] = useState(new Date())
+  const [notifications, setNotifications] = useState<NotificationItem[]>([])
+  const [notificationOpen, setNotificationOpen] = useState(false)
+  const router = useRouter()
+  const pathname = usePathname()
+
+  // Fetch dashboard data for notifications
+  const [dashboardData, setDashboardData] = useState({
+    inventory: [],
+    forecast: [],
+    logs: []
+  })
 
   useEffect(() => {
     setMounted(true)
     const timer = setInterval(() => setCurrentTime(new Date()), 1000)
     return () => clearInterval(timer)
   }, [])
+
+  // Fetch dashboard data for notifications
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        const [invRes, forecastRes, logsRes] = await Promise.all([
+          fetch('http://localhost:8000/inventory/').then(r => r.json()).catch(() => []),
+          fetch('http://localhost:8000/forecast/').then(r => r.json()).catch(() => []),
+          fetch('http://localhost:8000/logs/').then(r => r.json()).catch(() => [])
+        ])
+
+        setDashboardData({
+          inventory: Array.isArray(invRes) ? invRes.map((r: any) => ({
+            name: String(r.name ?? r.model ?? 'Unknown'),
+            available: Number(r.available ?? r.available_qty ?? 0),
+            required: Number(r.required ?? r.required_qty ?? 0)
+          })) : [],
+          forecast: Array.isArray(forecastRes) ? forecastRes.map((o: any) => ({
+            model: String(o.model ?? o.name ?? 'Unknown'),
+            qty: Number(o.qty ?? o.quantity ?? 0)
+          })) : [],
+          logs: Array.isArray(logsRes) ? logsRes : []
+        })
+      } catch (error) {
+        console.error('Failed to fetch dashboard data for notifications:', error)
+      }
+    }
+
+    fetchDashboardData()
+    const interval = setInterval(fetchDashboardData, 30000) // Refresh every 30 seconds
+    return () => clearInterval(interval)
+  }, [])
+
+  // Generate notifications from dashboard data
+  useEffect(() => {
+    if (dashboardData.inventory.length > 0) {
+      const newNotifications = generateDashboardNotifications(
+        dashboardData.inventory,
+        dashboardData.forecast,
+        dashboardData.logs
+      )
+      setNotifications(newNotifications)
+    }
+  }, [dashboardData])
 
   if (!mounted) return null
 
@@ -125,16 +197,114 @@ export function Topbar({ onSidebarToggle }: TopbarProps) {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.3, delay: 0.3 }}
           >
-            <Button variant="ghost" size="sm" className="relative p-2 hover:bg-slate-100 dark:hover:bg-slate-800">
-              <Bell className="h-5 w-5" />
-              <motion.div
-                animate={{ scale: [1, 1.2, 1] }}
-                transition={{ duration: 2, repeat: Infinity }}
-                className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full flex items-center justify-center"
+            <DropdownMenu open={notificationOpen} onOpenChange={setNotificationOpen}>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="relative p-2 hover:bg-slate-100 dark:hover:bg-slate-800">
+                  <Bell className="h-5 w-5" />
+                  {notifications.filter(n => !n.read).length > 0 && (
+                    <motion.div
+                      animate={{ scale: [1, 1.2, 1] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                      className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full flex items-center justify-center"
+                    >
+                      <span className="text-xs text-white font-bold">
+                        {Math.min(notifications.filter(n => !n.read).length, 9)}
+                      </span>
+                    </motion.div>
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                className="w-96 max-h-[500px] p-0"
+                sideOffset={8}
               >
-                <span className="text-xs text-white font-bold">3</span>
-              </motion.div>
-            </Button>
+                <div className="p-4 border-b border-slate-200 dark:border-slate-700">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-semibold text-slate-900 dark:text-white">
+                      Notifications
+                    </h3>
+                    {notifications.filter(n => !n.read).length > 0 && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setNotifications(markAllAsRead(notifications))}
+                        className="text-xs text-blue-600 hover:text-blue-700"
+                      >
+                        Mark all read
+                      </Button>
+                    )}
+                  </div>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                    {notifications.filter(n => !n.read).length} unread notifications
+                  </p>
+                </div>
+
+                <div className="max-h-80 overflow-y-auto">
+                  {notifications.length === 0 ? (
+                    <div className="p-6 text-center">
+                      <Bell className="h-8 w-8 text-slate-400 mx-auto mb-2" />
+                      <p className="text-sm text-slate-500 dark:text-slate-400">
+                        No notifications yet
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="p-2">
+                      {notifications.slice(0, 10).map((notification) => (
+                        <div
+                          key={notification.id}
+                          className={`p-3 rounded-lg mb-2 cursor-pointer transition-colors ${
+                            notification.read
+                              ? 'bg-slate-50 dark:bg-slate-800/50'
+                              : 'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800'
+                          } hover:bg-slate-100 dark:hover:bg-slate-700`}
+                          onClick={() => {
+                            setNotifications(markAsRead(notifications, notification.id))
+                            if (notification.actionUrl) {
+                              router.push(notification.actionUrl)
+                              setNotificationOpen(false)
+                            }
+                          }}
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className="text-lg">{getTypeIcon(notification.type)}</div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between">
+                                <p className={`text-sm font-medium ${
+                                  notification.read
+                                    ? 'text-slate-600 dark:text-slate-400'
+                                    : 'text-slate-900 dark:text-white'
+                                }`}>
+                                  {notification.title}
+                                </p>
+                                <span className={`text-xs px-2 py-1 rounded-full ${getPriorityColor(notification.priority)}`}>
+                                  {notification.priority}
+                                </span>
+                              </div>
+                              <p className={`text-xs mt-1 ${
+                                notification.read
+                                  ? 'text-slate-500 dark:text-slate-500'
+                                  : 'text-slate-600 dark:text-slate-300'
+                              }`}>
+                                {notification.message}
+                              </p>
+                              <div className="flex items-center justify-between mt-2">
+                                <span className="text-xs text-slate-400">
+                                  {formatNotificationTime(notification.timestamp)}
+                                </span>
+                                {notification.actionUrl && (
+                                  <ExternalLink className="h-3 w-3 text-slate-400" />
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </motion.div>
 
           {/* Theme Toggle */}

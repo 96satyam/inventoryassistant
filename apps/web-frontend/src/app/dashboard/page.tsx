@@ -76,7 +76,7 @@ const normaliseInventory = (raw: any[]): InventoryRow[] =>
       r.available ?? r.available_qty ?? r.in_stock ??
       r['No. Of Modules'] ?? r.no_of_modules ?? r['no._of_modules'] ?? 0
     ),
-    required: 0,           // patched later from forecast
+    required: 0,          
   }))
 
 /* ========================================================= */
@@ -91,6 +91,12 @@ export default function DashboardPage() {
   /* KPI modals */
   const [riskOpen,    setRiskOpen]    = useState(false)
   const [healthOpen,  setHealthOpen]  = useState(false)
+
+  /* Smart Inventory Assistant modals */
+  const [totalSKUsOpen, setTotalSKUsOpen] = useState(false)
+  const [healthyStockOpen, setHealthyStockOpen] = useState(false)
+  const [lowStockOpen, setLowStockOpen] = useState(false)
+  const [forecastedOpen, setForecastedOpen] = useState(false)
 
   /* ---- API pull ---- */
   const pullAll = async () => {
@@ -154,11 +160,26 @@ export default function DashboardPage() {
     [forecast],
   )
 
-  /* low‑stock toast */
+  /* low‑stock toast - scheduled for 1 hour delay */
   useEffect(() => {
     const low = inventory.filter(r => r.available < r.required)
     if (low.length) {
-      toast(`⚠️ Low stock: ${low.map(r => r.name).join(', ')}`)
+      console.log(`📅 Low stock notification scheduled for ${low.length} items in 1 hour:`, low.map(r => r.name).join(', '))
+
+      // Schedule notification to appear after 1 hour (3600000 milliseconds)
+      const notificationTimer = setTimeout(() => {
+        toast(`⚠️ Low stock: ${low.map(r => r.name).join(', ')}`, {
+          duration: 6000, // Show for 6 seconds
+          position: 'top-right',
+        })
+        console.log('📢 Low stock notification displayed')
+      }, 3600000) // 1 hour = 60 * 60 * 1000 = 3600000 milliseconds
+
+      // Cleanup timer if component unmounts or inventory changes
+      return () => {
+        clearTimeout(notificationTimer)
+        console.log('🧹 Low stock notification timer cleared')
+      }
     }
   }, [inventory])
 
@@ -247,7 +268,10 @@ export default function DashboardPage() {
 
             {/* Quick Stats Bar */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-4 text-white">
+              <div
+                className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-4 text-white cursor-pointer hover:from-blue-600 hover:to-blue-700 transition-all duration-200 transform hover:scale-105"
+                onClick={() => setTotalSKUsOpen(true)}
+              >
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-blue-100 text-sm">Total SKUs</p>
@@ -256,7 +280,10 @@ export default function DashboardPage() {
                   <Package className="h-8 w-8 text-blue-200" />
                 </div>
               </div>
-              <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-xl p-4 text-white">
+              <div
+                className="bg-gradient-to-r from-green-500 to-green-600 rounded-xl p-4 text-white cursor-pointer hover:from-green-600 hover:to-green-700 transition-all duration-200 transform hover:scale-105"
+                onClick={() => setHealthyStockOpen(true)}
+              >
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-green-100 text-sm">Healthy Stock</p>
@@ -265,7 +292,10 @@ export default function DashboardPage() {
                   <CheckCircle className="h-8 w-8 text-green-200" />
                 </div>
               </div>
-              <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl p-4 text-white">
+              <div
+                className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl p-4 text-white cursor-pointer hover:from-orange-600 hover:to-orange-700 transition-all duration-200 transform hover:scale-105"
+                onClick={() => setLowStockOpen(true)}
+              >
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-orange-100 text-sm">Low Stock</p>
@@ -274,7 +304,10 @@ export default function DashboardPage() {
                   <AlertCircle className="h-8 w-8 text-orange-200" />
                 </div>
               </div>
-              <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl p-4 text-white">
+              <div
+                className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl p-4 text-white cursor-pointer hover:from-purple-600 hover:to-purple-700 transition-all duration-200 transform hover:scale-105"
+                onClick={() => setForecastedOpen(true)}
+              >
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-purple-100 text-sm">Forecasted</p>
@@ -360,6 +393,28 @@ export default function DashboardPage() {
         </motion.div>
       </motion.section>
 
+      {/* ---------- SMART INVENTORY ASSISTANT MODALS ---------- */}
+      <TotalSKUsModal
+        open={totalSKUsOpen}
+        onClose={() => setTotalSKUsOpen(false)}
+        items={inventory}
+      />
+      <HealthyStockModal
+        open={healthyStockOpen}
+        onClose={() => setHealthyStockOpen(false)}
+        items={healthyItems}
+      />
+      <LowStockModal
+        open={lowStockOpen}
+        onClose={() => setLowStockOpen(false)}
+        items={lowItems}
+      />
+      <ForecastedModal
+        open={forecastedOpen}
+        onClose={() => setForecastedOpen(false)}
+        items={forecast}
+      />
+
       {/* ---------- MODALS ---------- */}
       <RiskModal
         open={riskOpen}
@@ -420,19 +475,41 @@ export default function DashboardPage() {
                 </p>
                 <ResponsiveContainer width="100%" height="90%">
                   <BarChart data={forecast} layout="vertical" margin={{ left: 90 }}>
-                    <XAxis type="number" />
+                    <XAxis
+                      type="number"
+                      tick={{
+                        fill: 'var(--foreground)',
+                        fontSize: 14,
+                        fontWeight: 700,
+                        fontFamily: 'Inter, system-ui, sans-serif'
+                      }}
+                      axisLine={{ stroke: 'var(--border)' }}
+                      tickLine={{ stroke: 'var(--border)' }}
+                    />
                     <YAxis
                       dataKey="model"
                       type="category"
                       width={200}
                       tickFormatter={v => v.length > 22 ? v.slice(0, 20) + '…' : v}
+                      tick={{
+                        fill: 'var(--foreground)',
+                        fontSize: 13,
+                        fontWeight: 700,
+                        fontFamily: 'Inter, system-ui, sans-serif'
+                      }}
+                      axisLine={{ stroke: 'var(--border)' }}
+                      tickLine={{ stroke: 'var(--border)' }}
                     />
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: 'rgba(255, 255, 255, 0.98)',
-                        border: '1px solid #e2e8f0',
+                        backgroundColor: 'var(--background)',
+                        border: '1px solid var(--border)',
                         borderRadius: '8px',
-                        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
+                        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+                        color: 'var(--foreground)',
+                        fontSize: '14px',
+                        fontWeight: 700,
+                        fontFamily: 'Inter, system-ui, sans-serif'
                       }}
                     />
                     <Bar
@@ -517,7 +594,7 @@ function EnhancedKPI({
 
           <div className="space-y-2">
             <h3 className="text-sm font-medium text-white/80">{title}</h3>
-            <p className="text-3xl font-bold">{value}</p>
+            <p className="text-3xl font-bold text-white">{value}</p>
             <p className="text-sm text-white/70">{subtitle}</p>
           </div>
 
@@ -602,9 +679,9 @@ function EnhancedKPIList({
             <div className="space-y-2 mb-4">
               {items.slice(0, 3).map((item, i) => (
                 <div key={i} className="flex items-center justify-between bg-white/10 rounded-lg p-2">
-                  <span className="text-sm truncate flex-1">{item.label}</span>
+                  <span className="text-sm truncate flex-1 text-white">{item.label}</span>
                   <div className="flex items-center space-x-2">
-                    <span className="text-sm font-medium">{item.value}</span>
+                    <span className="text-sm font-medium text-white">{item.value}</span>
                     {item.status === 'critical' && <XCircle className="h-4 w-4 text-red-200" />}
                   </div>
                 </div>
@@ -883,10 +960,10 @@ function EnhancedInventoryTable({ data }: { data: InventoryRow[] }) {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell header>Item</TableCell>
-                <TableCell header>Available</TableCell>
-                <TableCell header>Required</TableCell>
-                <TableCell header>Status</TableCell>
+                <TableCell header className="text-sm font-bold text-slate-900 dark:text-white">Item</TableCell>
+                <TableCell header className="text-sm font-bold text-slate-900 dark:text-white">Available</TableCell>
+                <TableCell header className="text-sm font-bold text-slate-900 dark:text-white">Required</TableCell>
+                <TableCell header className="text-sm font-bold text-slate-900 dark:text-white">Status</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -894,13 +971,19 @@ function EnhancedInventoryTable({ data }: { data: InventoryRow[] }) {
                 const low = it.available < it.required
                 return (
                   <TableRow key={i} className="hover:bg-slate-50 dark:hover:bg-slate-700/50">
-                    <TableCell>{it.name}</TableCell>
-                    <TableCell>{it.available || '–'}</TableCell>
-                    <TableCell>{it.required || '–'}</TableCell>
+                    <TableCell className="text-sm font-semibold text-slate-900 dark:text-white">
+                      {it.name}
+                    </TableCell>
+                    <TableCell className="text-sm font-semibold text-slate-900 dark:text-white">
+                      {it.available || '–'}
+                    </TableCell>
+                    <TableCell className="text-sm font-semibold text-slate-900 dark:text-white">
+                      {it.required || '–'}
+                    </TableCell>
                     <TableCell
                       className={cn(
-                        'font-medium',
-                        low ? 'text-red-600' : 'text-green-600',
+                        'text-sm font-bold',
+                        low ? 'text-red-600 dark:text-red-300' : 'text-green-600 dark:text-green-300',
                       )}
                     >
                       {low ? 'Low' : 'OK'}
@@ -971,29 +1054,35 @@ function EnhancedProcurementTable({
               </div>
             </div>
           </CardHeader>
-        <CardContent>
+        <CardContent className="bg-slate-100 dark:bg-slate-800/90 backdrop-blur-sm">
           <div className="overflow-x-auto">
             <Table>
               <TableHead>
-                <TableRow>
-                  <TableCell header>Date</TableCell>
-                  <TableCell header>Model</TableCell>
-                  <TableCell header>Quantity</TableCell>
+                <TableRow className="bg-slate-200 dark:bg-slate-900/80">
+                  <TableCell header className="text-sm font-bold text-slate-900 dark:text-white">Date</TableCell>
+                  <TableCell header className="text-sm font-bold text-slate-900 dark:text-white">Model</TableCell>
+                  <TableCell header className="text-sm font-bold text-slate-900 dark:text-white">Quantity</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {recent.length === 0 ? (
-                  <TableRow>
+                  <TableRow className="bg-slate-100 dark:bg-slate-800/60">
                     <TableCell colSpan={3} className="text-center py-8">
-                      <span className="text-muted-foreground">No procurement history yet.</span>
+                      <span className="text-slate-900 dark:text-white font-medium">No procurement history yet.</span>
                     </TableCell>
                   </TableRow>
                 ) : (
                   recent.map((r, i) => (
-                    <TableRow key={i} className="hover:bg-muted/50">
-                      <TableCell>{formatDate(r.timestamp)}</TableCell>
-                      <TableCell>{r.model}</TableCell>
-                      <TableCell>{r.qty}</TableCell>
+                    <TableRow key={i} className="bg-slate-100 dark:bg-slate-800/60 hover:bg-slate-200 dark:hover:bg-slate-700/80">
+                      <TableCell className="text-sm font-semibold text-slate-900 dark:text-white">
+                        {formatDate(r.timestamp)}
+                      </TableCell>
+                      <TableCell className="text-sm font-semibold text-slate-900 dark:text-white">
+                        {r.model}
+                      </TableCell>
+                      <TableCell className="text-sm font-bold text-slate-900 dark:text-white">
+                        {r.qty}
+                      </TableCell>
                     </TableRow>
                   ))
                 )}
@@ -1013,5 +1102,349 @@ function EnhancedProcurementTable({
         <Suggestions />
       </motion.div>
     </>
+  )
+}
+
+/* ---------- Smart Inventory Assistant Modals ---------- */
+
+/* Total SKUs Modal */
+function TotalSKUsModal({
+  open,
+  onClose,
+  items,
+}: {
+  open: boolean
+  onClose: () => void
+  items: InventoryRow[]
+}) {
+  if (!open) return null
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.9 }}
+        className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-4xl w-full mx-4 max-h-[80vh] overflow-hidden"
+      >
+        <div className="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-blue-500 to-blue-600">
+          <div>
+            <h2 className="text-2xl font-bold text-white">📦 Total SKUs</h2>
+            <p className="text-blue-100 mt-1">All {items.length} items in inventory</p>
+          </div>
+          <Button variant="ghost" size="icon" onClick={onClose} className="text-white hover:bg-white/20">
+            <X className="h-5 w-5" />
+          </Button>
+        </div>
+
+        <div className="p-6 overflow-y-auto max-h-[60vh]">
+          {items.length === 0 ? (
+            <div className="text-center py-8">
+              <Package className="h-12 w-12 text-slate-400 mx-auto mb-4" />
+              <p className="text-slate-500 dark:text-slate-400">No items in inventory</p>
+            </div>
+          ) : (
+            <div className="grid gap-3">
+              {items.map((item, index) => {
+                const stockStatus = item.available >= item.required ? 'healthy' : 'low'
+                const statusColor = stockStatus === 'healthy'
+                  ? 'text-green-600 bg-green-50 border-green-200'
+                  : 'text-orange-600 bg-orange-50 border-orange-200'
+                const statusIcon = stockStatus === 'healthy' ? '✅' : '⚠️'
+
+                return (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-700/50 rounded-lg border border-slate-200 dark:border-slate-600"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-lg">{statusIcon}</span>
+                      <div>
+                        <h3 className="font-medium text-slate-900 dark:text-white">{item.name}</h3>
+                        <p className="text-sm text-slate-500 dark:text-slate-400">
+                          Available: {item.available} | Required: {item.required}
+                        </p>
+                      </div>
+                    </div>
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium border ${statusColor}`}>
+                      {stockStatus === 'healthy' ? 'Healthy' : 'Low Stock'}
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      </motion.div>
+    </div>
+  )
+}
+
+/* Healthy Stock Modal */
+function HealthyStockModal({
+  open,
+  onClose,
+  items,
+}: {
+  open: boolean
+  onClose: () => void
+  items: InventoryRow[]
+}) {
+  if (!open) return null
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.9 }}
+        className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-4xl w-full mx-4 max-h-[80vh] overflow-hidden"
+      >
+        <div className="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-green-500 to-green-600">
+          <div>
+            <h2 className="text-2xl font-bold text-white">✅ Healthy Stock</h2>
+            <p className="text-green-100 mt-1">{items.length} items with adequate stock levels</p>
+          </div>
+          <Button variant="ghost" size="icon" onClick={onClose} className="text-white hover:bg-white/20">
+            <X className="h-5 w-5" />
+          </Button>
+        </div>
+
+        <div className="p-6 overflow-y-auto max-h-[60vh]">
+          {items.length === 0 ? (
+            <div className="text-center py-8">
+              <CheckCircle className="h-12 w-12 text-slate-400 mx-auto mb-4" />
+              <p className="text-slate-500 dark:text-slate-400">No items with healthy stock levels</p>
+            </div>
+          ) : (
+            <div className="grid gap-3">
+              {items.map((item, index) => {
+                const surplus = item.available - item.required
+                const surplusPercentage = item.required > 0 ? Math.round((surplus / item.required) * 100) : 0
+
+                return (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-lg">✅</span>
+                      <div>
+                        <h3 className="font-medium text-slate-900 dark:text-white">{item.name}</h3>
+                        <p className="text-sm text-slate-600 dark:text-slate-300">
+                          Available: {item.available} | Required: {item.required}
+                        </p>
+                        {surplus > 0 && (
+                          <p className="text-xs text-green-600 dark:text-green-400">
+                            +{surplus} surplus ({surplusPercentage > 0 ? `+${surplusPercentage}%` : 'adequate'})
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <span className="px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700 border border-green-200">
+                      Healthy
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      </motion.div>
+    </div>
+  )
+}
+
+/* Low Stock Modal */
+function LowStockModal({
+  open,
+  onClose,
+  items,
+}: {
+  open: boolean
+  onClose: () => void
+  items: InventoryRow[]
+}) {
+  if (!open) return null
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.9 }}
+        className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-4xl w-full mx-4 max-h-[80vh] overflow-hidden"
+      >
+        <div className="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-orange-500 to-orange-600">
+          <div>
+            <h2 className="text-2xl font-bold text-white">⚠️ Low Stock</h2>
+            <p className="text-orange-100 mt-1">{items.length} items below required levels</p>
+          </div>
+          <Button variant="ghost" size="icon" onClick={onClose} className="text-white hover:bg-white/20">
+            <X className="h-5 w-5" />
+          </Button>
+        </div>
+
+        <div className="p-6 overflow-y-auto max-h-[60vh]">
+          {items.length === 0 ? (
+            <div className="text-center py-8">
+              <CheckCircle className="h-12 w-12 text-green-400 mx-auto mb-4" />
+              <p className="text-slate-500 dark:text-slate-400">Great! No items with low stock 🎉</p>
+            </div>
+          ) : (
+            <div className="grid gap-3">
+              {items
+                .sort((a, b) => (b.required - b.available) - (a.required - a.available)) // Sort by urgency
+                .map((item, index) => {
+                  const shortage = item.required - item.available
+                  const criticalLevel = item.available === 0 ? 'critical' : item.available < item.required * 0.3 ? 'urgent' : 'low'
+                  const statusColor =
+                    criticalLevel === 'critical' ? 'text-red-600 bg-red-50 border-red-200' :
+                    criticalLevel === 'urgent' ? 'text-orange-600 bg-orange-50 border-orange-200' :
+                    'text-yellow-600 bg-yellow-50 border-yellow-200'
+                  const statusIcon =
+                    criticalLevel === 'critical' ? '🚨' :
+                    criticalLevel === 'urgent' ? '⚠️' : '📦'
+
+                  return (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="text-lg">{statusIcon}</span>
+                        <div>
+                          <h3 className="font-medium text-slate-900 dark:text-white">{item.name}</h3>
+                          <p className="text-sm text-slate-600 dark:text-slate-300">
+                            Available: {item.available} | Required: {item.required}
+                          </p>
+                          <p className="text-xs text-red-600 dark:text-red-400 font-medium">
+                            Need {shortage} more units
+                          </p>
+                        </div>
+                      </div>
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium border ${statusColor}`}>
+                        {criticalLevel === 'critical' ? 'Critical' : criticalLevel === 'urgent' ? 'Urgent' : 'Low Stock'}
+                      </span>
+                    </div>
+                  )
+                })}
+            </div>
+          )}
+        </div>
+      </motion.div>
+    </div>
+  )
+}
+
+/* Forecasted Modal */
+function ForecastedModal({
+  open,
+  onClose,
+  items,
+}: {
+  open: boolean
+  onClose: () => void
+  items: ForecastRow[]
+}) {
+  if (!open) return null
+
+  const totalForecast = items.reduce((sum, item) => sum + item.qty, 0)
+  const sortedItems = [...items].sort((a, b) => b.qty - a.qty) // Sort by quantity descending
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.9 }}
+        className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-4xl w-full mx-4 max-h-[80vh] overflow-hidden"
+      >
+        <div className="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-purple-500 to-purple-600">
+          <div>
+            <h2 className="text-2xl font-bold text-white">📈 Forecasted Demand</h2>
+            <p className="text-purple-100 mt-1">{totalForecast} total units forecasted across {items.length} models</p>
+          </div>
+          <Button variant="ghost" size="icon" onClick={onClose} className="text-white hover:bg-white/20">
+            <X className="h-5 w-5" />
+          </Button>
+        </div>
+
+        <div className="p-6 overflow-y-auto max-h-[60vh]">
+          {items.length === 0 ? (
+            <div className="text-center py-8">
+              <BarChart3 className="h-12 w-12 text-slate-400 mx-auto mb-4" />
+              <p className="text-slate-500 dark:text-slate-400">No forecast data available</p>
+            </div>
+          ) : (
+            <div className="grid gap-3">
+              {sortedItems.map((item, index) => {
+                const demandLevel =
+                  item.qty >= 20 ? 'high' :
+                  item.qty >= 10 ? 'medium' : 'low'
+                const demandColor =
+                  demandLevel === 'high' ? 'text-red-600 bg-red-50 border-red-200' :
+                  demandLevel === 'medium' ? 'text-orange-600 bg-orange-50 border-orange-200' :
+                  'text-blue-600 bg-blue-50 border-blue-200'
+                const demandIcon =
+                  demandLevel === 'high' ? '🔥' :
+                  demandLevel === 'medium' ? '📊' : '📈'
+                const percentage = totalForecast > 0 ? Math.round((item.qty / totalForecast) * 100) : 0
+
+                return (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-lg">{demandIcon}</span>
+                      <div>
+                        <h3 className="font-medium text-slate-900 dark:text-white">{item.model}</h3>
+                        <p className="text-sm text-slate-600 dark:text-slate-300">
+                          Forecasted quantity: {item.qty} units
+                        </p>
+                        <p className="text-xs text-purple-600 dark:text-purple-400">
+                          {percentage}% of total forecast
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium border ${demandColor}`}>
+                        {demandLevel === 'high' ? 'High Demand' : demandLevel === 'medium' ? 'Medium Demand' : 'Low Demand'}
+                      </span>
+                      <p className="text-lg font-bold text-slate-900 dark:text-white mt-1">{item.qty}</p>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+
+          {items.length > 0 && (
+            <div className="mt-6 p-4 bg-slate-100 dark:bg-slate-700 rounded-lg">
+              <h4 className="font-medium text-slate-900 dark:text-white mb-2">📊 Forecast Summary</h4>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                <div>
+                  <p className="text-slate-500 dark:text-slate-400">Total Models</p>
+                  <p className="font-bold text-slate-900 dark:text-white">{items.length}</p>
+                </div>
+                <div>
+                  <p className="text-slate-500 dark:text-slate-400">Total Units</p>
+                  <p className="font-bold text-slate-900 dark:text-white">{totalForecast}</p>
+                </div>
+                <div>
+                  <p className="text-slate-500 dark:text-slate-400">High Demand</p>
+                  <p className="font-bold text-red-600">{sortedItems.filter(i => i.qty >= 20).length}</p>
+                </div>
+                <div>
+                  <p className="text-slate-500 dark:text-slate-400">Average/Model</p>
+                  <p className="font-bold text-slate-900 dark:text-white">{Math.round(totalForecast / items.length)}</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </motion.div>
+    </div>
   )
 }

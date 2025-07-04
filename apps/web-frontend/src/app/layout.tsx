@@ -5,6 +5,7 @@ import "./globals.css"
 import Shell from "@/components/layout/shell"
 import { ThemeProvider } from "@/components/providers/theme-provider"
 import { Toaster } from "react-hot-toast"
+import { Toaster as SonnerToaster } from "sonner"
 
 /*  ─────  Next.js App‑Router metadata  ─────  */
 export const metadata = {
@@ -40,6 +41,22 @@ export default function RootLayout({
             position="top-right"
             toastOptions={{
               duration: 4000,
+              style: {
+                background: 'var(--background)',
+                color: 'var(--foreground)',
+                border: '1px solid var(--border)',
+              }
+            }}
+          />
+
+          {/* Sonner Toast notifications for enhanced PO functionality */}
+          <SonnerToaster
+            position="top-right"
+            richColors
+            closeButton
+            expand={true}
+            visibleToasts={5}
+            toastOptions={{
               style: {
                 background: 'var(--background)',
                 color: 'var(--foreground)',
