@@ -101,11 +101,12 @@ export default function DashboardPage() {
   /* ---- API pull ---- */
   const pullAll = async () => {
     try {
+      const { apiFetch, API_ENDPOINTS } = await import("@/lib/api-config")
       const [s, i, f, l] = await Promise.all([
-        fetch('http://localhost:8000/stats/').then(r => r.json()),
-        fetch('http://localhost:8000/inventory/').then(r => r.json()),
-        fetch('http://localhost:8000/forecast/').then(r => r.json()),
-        fetch('http://localhost:8000/procurement/logs').then(r => r.json()),
+        apiFetch(API_ENDPOINTS.STATS).then(r => r.json()),
+        apiFetch(API_ENDPOINTS.INVENTORY).then(r => r.json()),
+        apiFetch(API_ENDPOINTS.FORECAST).then(r => r.json()),
+        apiFetch(API_ENDPOINTS.PROCUREMENT_LOGS).then(r => r.json()),
       ])
 
       setStats(s)

@@ -1,8 +1,10 @@
+import { apiFetch, API_ENDPOINTS } from "./api-config";
+
 export async function runPipeline(file: File) {
   const form = new FormData();
   form.append("file", file);
 
-  const response = await fetch("http://localhost:8000/run-pipeline", {
+  const response = await apiFetch(API_ENDPOINTS.RUN_PIPELINE, {
     method: "POST",
     body: form,
   });

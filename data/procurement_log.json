@@ -1,5 +1,12 @@
 [
   {
+    "timestamp": "2025-07-04T13:24:35.332074",
+    "items": {
+      "HANWHA QCELL : Q.PEAK DUO BLK ML-GL10+410": 12,
+      "SOLAREDGE U650 POWER OPTIMIZER": 1
+    }
+  },
+  {
     "timestamp": "2025-07-04T00:33:13.931187",
     "items": {
       "HANWHA QCELL : Q.PEAK DUO BLK ML-GL10+410": 11,
@@ -124,12 +131,6 @@
   },
   {
     "timestamp": "2025-06-30T12:23:17.053770",
-    "items": {
-      "HANWHA QCELL : Q.PEAK DUO BLK ML-GL10+410": 11
-    }
-  },
-  {
-    "timestamp": "2025-06-30T12:03:11.502729",
     "items": {
       "HANWHA QCELL : Q.PEAK DUO BLK ML-GL10+410": 11
     }

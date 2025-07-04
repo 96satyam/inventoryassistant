@@ -18,7 +18,9 @@ export default function Suggestions() {
   useEffect(() => {
     const fetchSuggestions = async () => {
       try {
-        const response = await fetch('http://localhost:8000/suggestions/');
+        const { apiFetch, API_ENDPOINTS } = await import("@/lib/api-config")
+        console.log('🔗 Fetching suggestions...');
+        const response = await apiFetch(API_ENDPOINTS.SUGGESTIONS);
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}`);
         }

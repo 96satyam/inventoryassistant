@@ -148,7 +148,9 @@ export function VendorCard({
         itemsDict[item.name] = item.qty;
       });
 
-      const response = await fetch("http://localhost:8000/procurement/send-email", {
+      const { apiFetch, API_ENDPOINTS } = await import("@/lib/api-config")
+      console.log('📧 Sending PO email...');
+      const response = await apiFetch(API_ENDPOINTS.PROCUREMENT_SEND_EMAIL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

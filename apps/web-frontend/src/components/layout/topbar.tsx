@@ -75,10 +75,11 @@ export function Topbar({ onSidebarToggle }: TopbarProps) {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
+        const { apiFetch, API_ENDPOINTS } = await import("@/lib/api-config")
         const [invRes, forecastRes, logsRes] = await Promise.all([
-          fetch('http://localhost:8000/inventory/').then(r => r.json()).catch(() => []),
-          fetch('http://localhost:8000/forecast/').then(r => r.json()).catch(() => []),
-          fetch('http://localhost:8000/logs/').then(r => r.json()).catch(() => [])
+          apiFetch(API_ENDPOINTS.INVENTORY).then(r => r.json()).catch(() => []),
+          apiFetch(API_ENDPOINTS.FORECAST).then(r => r.json()).catch(() => []),
+          apiFetch(API_ENDPOINTS.PROCUREMENT_LOGS).then(r => r.json()).catch(() => [])
         ])
 
         setDashboardData({
