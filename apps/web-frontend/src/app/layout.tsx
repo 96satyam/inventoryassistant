@@ -2,8 +2,8 @@
    Global Layout – Smart Inventory Assistant
    -------------------------------------------------------------------- */
 import "./globals.css"
-import { Sidebar } from "@/components/layout/sidebar"
-import { Topbar } from "@/components/layout/topbar"
+import Shell from "@/components/layout/shell"
+import { ThemeProvider } from "@/components/providers/theme-provider"
 import { Toaster } from "react-hot-toast"
 
 /*  ─────  Next.js App‑Router metadata  ─────  */
@@ -28,21 +28,31 @@ export default function RootLayout({
         <link rel="icon" href="/smart-assistant.svg" />
       </head>
 
-      <body className="min-h-screen bg-white text-black antialiased dark:bg-gray-950 dark:text-white">
-        {/* Toast notifications */}
-        <Toaster position="top-right" toastOptions={{ duration: 4000 }} />
+      <body className="antialiased">
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          {/* Toast notifications */}
+          <Toaster
+            position="top-right"
+            toastOptions={{
+              duration: 4000,
+              style: {
+                background: 'var(--background)',
+                color: 'var(--foreground)',
+                border: '1px solid var(--border)',
+              }
+            }}
+          />
 
-        {/* Global topbar */}
-        <Topbar />
-
-        {/* Sidebar + main content */}
-        <div className="flex min-h-[calc(100vh-64px)]">
-          <Sidebar />
-
-          <main className="flex-1 overflow-auto px-6 py-8">
+          {/* Enhanced Shell Layout */}
+          <Shell>
             {children}
-          </main>
-        </div>
+          </Shell>
+        </ThemeProvider>
       </body>
     </html>
   )
