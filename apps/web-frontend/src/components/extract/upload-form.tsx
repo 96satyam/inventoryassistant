@@ -30,17 +30,39 @@ export default function UploadForm() {
     form.append("file", file)
 
     try {
-      const res = await fetch("http://localhost:8000/run-pipeline", {
+      const { apiFetch, API_ENDPOINTS } = await import("@/lib/api-config")
+
+      // Create abort controller for timeout
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 60000) // 60 second timeout
+
+      const res = await apiFetch(API_ENDPOINTS.RUN_PIPELINE, {
         method: "POST",
         body: form,
+        signal: controller.signal,
       })
 
-      if (!res.ok) throw new Error("Pipeline failed")
+      clearTimeout(timeoutId)
+
+      if (!res.ok) {
+        const errorText = await res.text()
+        console.error(`Pipeline failed with status ${res.status}:`, errorText)
+        throw new Error(`Pipeline failed (${res.status}): ${errorText}`)
+      }
+
       const data = await res.json()
       setResult(data)
     } catch (err: any) {
-      console.error(err)
-      setError(err.message || "Failed to process")
+      console.error("Pipeline error:", err)
+      if (err.name === 'AbortError') {
+        setError("Pipeline processing timed out after 60 seconds. The PDF might be too complex or the server is overloaded.")
+      } else if (err.name === 'TypeError' && err.message.includes('fetch')) {
+        setError("Cannot connect to backend server. Please ensure the API server is running on port 8000.")
+      } else if (err.message.includes('timeout')) {
+        setError("Pipeline processing timed out. The PDF might be too complex or the server is overloaded.")
+      } else {
+        setError(err.message || "Failed to process PDF. Please try again.")
+      }
     } finally {
       setLoading(false)
     }

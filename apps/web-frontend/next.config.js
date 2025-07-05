@@ -1,15 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Configure allowed development origins for cross-origin requests
-  allowedDevOrigins: [
-    'localhost:3001',
-    '192.168.0.80:3001',
-    '127.0.0.1:3001',
-    'localhost:3000',
-    '192.168.0.80:3000',
-    '127.0.0.1:3000',
-  ],
-
   // API configuration for production
   async rewrites() {
     return [
@@ -40,6 +30,18 @@ const nextConfig = {
             key: 'Referrer-Policy',
             value: 'origin-when-cross-origin',
           },
+          {
+            key: 'Access-Control-Allow-Origin',
+            value: '*',
+          },
+          {
+            key: 'Access-Control-Allow-Methods',
+            value: 'GET, POST, PUT, DELETE, OPTIONS',
+          },
+          {
+            key: 'Access-Control-Allow-Headers',
+            value: 'Content-Type, Authorization',
+          },
         ],
       },
     ];
@@ -47,7 +49,7 @@ const nextConfig = {
 
   // Image optimization
   images: {
-    domains: ['localhost', '192.168.0.80'],
+    domains: ['localhost', '192.168.0.80', '172.20.10.3'],
     formats: ['image/webp', 'image/avif'],
   },
 

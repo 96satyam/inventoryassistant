@@ -2,6 +2,8 @@
 'use client'
 
 import { useEffect, useState, useMemo } from 'react'
+import { useRouter } from 'next/navigation'
+import { isAuthenticated } from '@/utils/authMiddleware'
 import {
   FileDown,
   TrendingUp,
@@ -76,11 +78,24 @@ const normaliseInventory = (raw: any[]): InventoryRow[] =>
       r.available ?? r.available_qty ?? r.in_stock ??
       r['No. Of Modules'] ?? r.no_of_modules ?? r['no._of_modules'] ?? 0
     ),
-    required: 0,          
+    required: Number(
+      r.required ?? r.required_qty ?? r.demand ?? r.needed ??
+      r.target ?? r.minimum_stock ?? r.min_stock ?? 0
+    ),
   }))
 
 /* ========================================================= */
 export default function DashboardPage() {
+  const router = useRouter()
+
+  /* ---- Authentication Check ---- */
+  useEffect(() => {
+    if (!isAuthenticated()) {
+      router.replace('/login')
+      return
+    }
+  }, [router])
+
   /* ---- state ---- */
   const [stats,     setStats]     = useState<any>(null)
   const [inv,       setInv]       = useState<InventoryRow[]>([])
@@ -101,12 +116,46 @@ export default function DashboardPage() {
   /* ---- API pull ---- */
   const pullAll = async () => {
     try {
-      const { apiFetch, API_ENDPOINTS } = await import("@/lib/api-config")
+      const { apiFetch, API_ENDPOINTS, getApiBaseUrl } = await import("@/lib/api-config")
+      const {
+        isBackendAvailable,
+        getDataWithFallback,
+        FALLBACK_STATS,
+        FALLBACK_INVENTORY,
+        FALLBACK_FORECAST,
+        FALLBACK_LOGS
+      } = await import("@/utils/fallback-data")
+
+      // Check if backend is available
+      const backendAvailable = await isBackendAvailable(getApiBaseUrl())
+
+      if (!backendAvailable) {
+        // Use fallback data
+        setStats(FALLBACK_STATS)
+        setInv(normaliseInventory(FALLBACK_INVENTORY))
+        setForecast(FALLBACK_FORECAST)
+        setLogs(FALLBACK_LOGS)
+        return
+      }
+
+      // Try to fetch from backend
       const [s, i, f, l] = await Promise.all([
-        apiFetch(API_ENDPOINTS.STATS).then(r => r.json()),
-        apiFetch(API_ENDPOINTS.INVENTORY).then(r => r.json()),
-        apiFetch(API_ENDPOINTS.FORECAST).then(r => r.json()),
-        apiFetch(API_ENDPOINTS.PROCUREMENT_LOGS).then(r => r.json()),
+        getDataWithFallback(
+          () => apiFetch(API_ENDPOINTS.STATS).then(r => r.json()),
+          FALLBACK_STATS
+        ),
+        getDataWithFallback(
+          () => apiFetch(API_ENDPOINTS.INVENTORY).then(r => r.json()),
+          FALLBACK_INVENTORY
+        ),
+        getDataWithFallback(
+          () => apiFetch(API_ENDPOINTS.FORECAST).then(r => r.json()),
+          FALLBACK_FORECAST
+        ),
+        getDataWithFallback(
+          () => apiFetch(API_ENDPOINTS.PROCUREMENT_LOGS).then(r => r.json()),
+          FALLBACK_LOGS
+        ),
       ])
 
       setStats(s)
@@ -128,8 +177,21 @@ export default function DashboardPage() {
 
       setForecast(parsed)
       setLogs(Array.isArray(l) ? l : [])
-    } catch {
-      toast.error('❌ Failed to fetch dashboard data')
+    } catch (error) {
+      console.error('Dashboard data fetch error:', error)
+
+      // Load fallback data on error
+      const {
+        FALLBACK_STATS,
+        FALLBACK_INVENTORY,
+        FALLBACK_FORECAST,
+        FALLBACK_LOGS
+      } = await import("@/utils/fallback-data")
+
+      setStats(FALLBACK_STATS)
+      setInv(normaliseInventory(FALLBACK_INVENTORY))
+      setForecast(FALLBACK_FORECAST)
+      setLogs(FALLBACK_LOGS)
     } finally {
       setLoading(false)
     }
@@ -137,6 +199,12 @@ export default function DashboardPage() {
 
   /* ---- load on mount ---- */
   useEffect(() => {
+    // Check authentication first
+    if (!isAuthenticated()) {
+      router.push('/login')
+      return
+    }
+
     pullAll()
     const id = setInterval(pullAll, 20_000)
     return () => clearInterval(id)
@@ -151,7 +219,7 @@ export default function DashboardPage() {
   const inventory = useMemo(() => {
     return inv.map(row => ({
       ...row,
-      required: demandMap[row.name] ?? 0,
+      required: demandMap[row.name] ?? row.required ?? 0,
     }))
   }, [inv, demandMap])
 
@@ -165,21 +233,17 @@ export default function DashboardPage() {
   useEffect(() => {
     const low = inventory.filter(r => r.available < r.required)
     if (low.length) {
-      console.log(`📅 Low stock notification scheduled for ${low.length} items in 1 hour:`, low.map(r => r.name).join(', '))
-
       // Schedule notification to appear after 1 hour (3600000 milliseconds)
       const notificationTimer = setTimeout(() => {
         toast(`⚠️ Low stock: ${low.map(r => r.name).join(', ')}`, {
           duration: 6000, // Show for 6 seconds
           position: 'top-right',
         })
-        console.log('📢 Low stock notification displayed')
       }, 3600000) // 1 hour = 60 * 60 * 1000 = 3600000 milliseconds
 
       // Cleanup timer if component unmounts or inventory changes
       return () => {
         clearTimeout(notificationTimer)
-        console.log('🧹 Low stock notification timer cleared')
       }
     }
   }, [inventory])

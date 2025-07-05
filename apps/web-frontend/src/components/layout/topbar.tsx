@@ -34,6 +34,9 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { toast } from 'react-hot-toast'
+import { signOutUser, getAuthState } from '@/utils/authMiddleware'
+import { trackActivity } from '@/utils/activity'
 import {
   generateDashboardNotifications,
   getNotificationCounts,
@@ -55,6 +58,7 @@ export function Topbar({ onSidebarToggle }: TopbarProps) {
   const [currentTime, setCurrentTime] = useState(new Date())
   const [notifications, setNotifications] = useState<NotificationItem[]>([])
   const [notificationOpen, setNotificationOpen] = useState(false)
+  const [currentUser, setCurrentUser] = useState<any>(null)
   const router = useRouter()
   const pathname = usePathname()
 
@@ -68,18 +72,55 @@ export function Topbar({ onSidebarToggle }: TopbarProps) {
   useEffect(() => {
     setMounted(true)
     const timer = setInterval(() => setCurrentTime(new Date()), 1000)
+
+    // Load current user
+    const authState = getAuthState()
+    if (authState.isAuthenticated && authState.user) {
+      setCurrentUser(authState.user)
+    }
+
     return () => clearInterval(timer)
   }, [])
 
-  // Fetch dashboard data for notifications
+  // Fetch dashboard data for notifications with fallback
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const { apiFetch, API_ENDPOINTS } = await import("@/lib/api-config")
+        // Try to fetch from API first
+        const { apiFetch, API_ENDPOINTS, getApiBaseUrl } = await import("@/lib/api-config")
+        const {
+          isBackendAvailable,
+          FALLBACK_INVENTORY,
+          FALLBACK_FORECAST,
+          FALLBACK_LOGS
+        } = await import("@/utils/fallback-data")
+
+        // Check if backend is available
+        const backendAvailable = await isBackendAvailable(getApiBaseUrl())
+
+        if (!backendAvailable) {
+          console.log('📡 Topbar: Using fallback data - backend not available')
+          // Use fallback data
+          setDashboardData({
+            inventory: FALLBACK_INVENTORY.map((r: any) => ({
+              name: String(r.name ?? 'Unknown'),
+              available: Number(r.available ?? 0),
+              required: Number(r.required ?? 0)
+            })),
+            forecast: FALLBACK_FORECAST.map((r: any) => ({
+              model: String(r.model ?? 'Unknown'),
+              qty: Number(r.qty ?? 0)
+            })),
+            logs: FALLBACK_LOGS
+          })
+          return
+        }
+
+        // Try API calls with fallback
         const [invRes, forecastRes, logsRes] = await Promise.all([
-          apiFetch(API_ENDPOINTS.INVENTORY).then(r => r.json()).catch(() => []),
-          apiFetch(API_ENDPOINTS.FORECAST).then(r => r.json()).catch(() => []),
-          apiFetch(API_ENDPOINTS.PROCUREMENT_LOGS).then(r => r.json()).catch(() => [])
+          apiFetch(API_ENDPOINTS.INVENTORY).then(r => r.json()).catch(() => FALLBACK_INVENTORY),
+          apiFetch(API_ENDPOINTS.FORECAST).then(r => r.json()).catch(() => FALLBACK_FORECAST),
+          apiFetch(API_ENDPOINTS.PROCUREMENT_LOGS).then(r => r.json()).catch(() => FALLBACK_LOGS)
         ])
 
         setDashboardData({
@@ -95,7 +136,27 @@ export function Topbar({ onSidebarToggle }: TopbarProps) {
           logs: Array.isArray(logsRes) ? logsRes : []
         })
       } catch (error) {
-        console.error('Failed to fetch dashboard data for notifications:', error)
+        console.warn('⚠️ Topbar: Failed to fetch dashboard data, using fallback:', error)
+
+        // Load fallback data on error
+        const {
+          FALLBACK_INVENTORY,
+          FALLBACK_FORECAST,
+          FALLBACK_LOGS
+        } = await import("@/utils/fallback-data")
+
+        setDashboardData({
+          inventory: FALLBACK_INVENTORY.map((r: any) => ({
+            name: String(r.name ?? 'Unknown'),
+            available: Number(r.available ?? 0),
+            required: Number(r.required ?? 0)
+          })),
+          forecast: FALLBACK_FORECAST.map((r: any) => ({
+            model: String(r.model ?? 'Unknown'),
+            qty: Number(r.qty ?? 0)
+          })),
+          logs: FALLBACK_LOGS
+        })
       }
     }
 
@@ -115,6 +176,80 @@ export function Topbar({ onSidebarToggle }: TopbarProps) {
       setNotifications(newNotifications)
     }
   }, [dashboardData])
+
+  // Handle dropdown menu clicks
+  const handleMenuClick = async (action: 'profile' | 'system' | 'activity' | 'logout') => {
+    try {
+      const authState = getAuthState()
+      const userId = authState.user?.username || 'anonymous'
+
+      switch (action) {
+        case 'profile':
+          router.push('/profile')
+          try {
+            await trackActivity({
+              userId,
+              type: 'page_view',
+              action: 'profile_navigation',
+              description: 'Navigated to profile settings'
+            })
+          } catch (error) {
+            console.log('Activity tracking failed:', error)
+          }
+          break
+        case 'system':
+          router.push('/system-settings')
+          try {
+            await trackActivity({
+              userId,
+              type: 'page_view',
+              action: 'system_navigation',
+              description: 'Navigated to system settings'
+            })
+          } catch (error) {
+            console.log('Activity tracking failed:', error)
+          }
+          break
+        case 'activity':
+          router.push('/activity')
+          try {
+            await trackActivity({
+              userId,
+              type: 'page_view',
+              action: 'activity_navigation',
+              description: 'Navigated to activity log'
+            })
+          } catch (error) {
+            console.log('Activity tracking failed:', error)
+          }
+          break
+        case 'logout':
+          const result = await signOutUser()
+          if (result.success) {
+            toast.success(result.message)
+            if (authState.user) {
+              try {
+                await trackActivity({
+                  userId: authState.user.username,
+                  type: 'logout',
+                  action: 'user_logout',
+                  description: `User ${authState.user.name} signed out`
+                })
+              } catch (error) {
+                console.log('Activity tracking failed:', error)
+              }
+            }
+            router.push('/login') // Redirect to login page
+          } else {
+            toast.error(result.message)
+          }
+          break
+      }
+    } catch (error) {
+      console.error('Navigation error:', error)
+      // Don't show error toast for navigation - just log it
+    }
+  }
 
   if (!mounted) return null
 
@@ -342,30 +477,42 @@ export function Topbar({ onSidebarToggle }: TopbarProps) {
                   </div>
                   <div className="hidden md:block text-left">
                     <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                      Solar Admin
+                      {currentUser?.name || 'Solar Admin'}
                     </p>
                     <p className="text-xs text-slate-500 dark:text-slate-400">
-                      System Administrator
+                      {currentUser?.role ? currentUser.role.charAt(0).toUpperCase() + currentUser.role.slice(1) : 'System Administrator'}
                     </p>
                   </div>
                   <ChevronDown className="h-4 w-4 text-slate-500" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuItem className="flex items-center gap-2">
+                <DropdownMenuItem
+                  className="flex items-center gap-2 cursor-pointer"
+                  onClick={() => handleMenuClick('profile')}
+                >
                   <User className="h-4 w-4" />
                   Profile Settings
                 </DropdownMenuItem>
-                <DropdownMenuItem className="flex items-center gap-2">
+                <DropdownMenuItem
+                  className="flex items-center gap-2 cursor-pointer"
+                  onClick={() => handleMenuClick('system')}
+                >
                   <Settings className="h-4 w-4" />
                   System Settings
                 </DropdownMenuItem>
-                <DropdownMenuItem className="flex items-center gap-2">
+                <DropdownMenuItem
+                  className="flex items-center gap-2 cursor-pointer"
+                  onClick={() => handleMenuClick('activity')}
+                >
                   <Activity className="h-4 w-4" />
                   Activity Log
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="flex items-center gap-2 text-red-600">
+                <DropdownMenuItem
+                  className="flex items-center gap-2 text-red-600 cursor-pointer"
+                  onClick={() => handleMenuClick('logout')}
+                >
                   <Zap className="h-4 w-4" />
                   Sign Out
                 </DropdownMenuItem>

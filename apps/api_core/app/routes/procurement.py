@@ -6,6 +6,9 @@ from pathlib import Path
 from typing import List, Dict
 import os, json
 
+import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', '..', '..'))
 from libs.core.procurement_logger import (
     read_procurement_log,
     log_procurement,

@@ -2,7 +2,7 @@
    Global Layout – Smart Inventory Assistant
    -------------------------------------------------------------------- */
 import "./globals.css"
-import Shell from "@/components/layout/shell"
+import AuthLayout from "@/components/layout/auth-layout"
 import { ThemeProvider } from "@/components/providers/theme-provider"
 import { Toaster } from "react-hot-toast"
 import { Toaster as SonnerToaster } from "sonner"
@@ -65,10 +65,10 @@ export default function RootLayout({
             }}
           />
 
-          {/* Enhanced Shell Layout */}
-          <Shell>
+          {/* Authentication-aware Layout */}
+          <AuthLayout>
             {children}
-          </Shell>
+          </AuthLayout>
         </ThemeProvider>
       </body>
     </html>

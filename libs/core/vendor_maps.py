@@ -3,7 +3,9 @@ import json, os
 from pathlib import Path
 from functools import lru_cache
 
-_JSON_PATH = Path("data") / "vendor_data.json"
+# Get the project root directory (where data folder is located)
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+_JSON_PATH = PROJECT_ROOT / "data" / "vendor_data.json"
 
 
 @lru_cache(maxsize=1)

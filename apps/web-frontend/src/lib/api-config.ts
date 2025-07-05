@@ -5,22 +5,29 @@
 
 /**
  * Get the base API URL based on environment
- * In development: http://localhost:8000
- * In production: Uses current hostname with port 8000
+ * In development: http://localhost:8003 (temporary port change)
+ * In production: Uses current hostname with port 8003
  */
 export function getApiBaseUrl(): string {
   if (typeof window === 'undefined') {
     // Server-side rendering - use localhost
-    return 'http://localhost:8000';
+    return 'http://localhost:8003';
   }
-  
+
   if (process.env.NODE_ENV === 'production') {
     // Production - use current hostname with API port
-    return `${window.location.protocol}//${window.location.hostname}:8000`;
+    return `${window.location.protocol}//${window.location.hostname}:8003`;
   }
-  
-  // Development - use localhost
-  return 'http://localhost:8000';
+
+  // Development - check if we're on network access
+  const hostname = window.location.hostname;
+  if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
+    // Network access - use current hostname
+    return `${window.location.protocol}//${hostname}:8003`;
+  }
+
+  // Local development - use localhost
+  return 'http://localhost:8003';
 }
 
 /**

@@ -5,64 +5,69 @@ import { motion } from "framer-motion"
 import { ShoppingCart, Bot, TrendingUp, Package, Clock, BarChart3, Zap, CheckCircle } from "lucide-react"
 import ProcurementTable from "@/components/procurement/procurement-table"
 import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import { getAuthState } from "@/utils/authMiddleware"
 
 export default function ProcurementPage() {
+  const router = useRouter()
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Check authentication first
+    const authState = getAuthState()
+    if (!authState.isAuthenticated) {
+      router.push('/login')
+      return
+    }
+
     const fetchLogs = async () => {
       setLoading(true);
       try {
-        const res = await fetch("http://localhost:8000/procurement/logs", { cache: "no-store" });
+        // Use API config for consistent endpoint management
+        const { apiFetch, API_ENDPOINTS } = await import("@/lib/api-config")
+        const {
+          isBackendAvailable,
+          getDataWithFallback,
+          FALLBACK_LOGS
+        } = await import("@/utils/fallback-data")
 
-        if (!res.ok) {
-          throw new Error(`HTTP error! status: ${res.status}`);
+        // Check if backend is available
+        const { getApiBaseUrl } = await import("@/lib/api-config")
+        const backendAvailable = await isBackendAvailable(getApiBaseUrl())
+
+        if (!backendAvailable) {
+          console.log("Backend unavailable, using fallback data");
+          setLogs(FALLBACK_LOGS);
+          return;
         }
 
-        let data = await res.json();
+        // Fetch all procurement logs (no limit for procurement page)
+        const data = await getDataWithFallback(
+          () => apiFetch(API_ENDPOINTS.PROCUREMENT_LOGS).then(r => r.json()),
+          FALLBACK_LOGS
+        );
+
         console.log("Procurement logs loaded:", data?.length || 0, "entries");
 
         if (Array.isArray(data)) {
           setLogs(data);
         } else {
           console.error("Invalid data format received from API");
-          setLogs([]);
+          setLogs(FALLBACK_LOGS);
         }
       } catch (error) {
         console.error("Failed to fetch procurement logs:", error);
-        // Set comprehensive fallback data with correct structure
-        setLogs([
-          {
-            timestamp: new Date().toISOString(),
-            items: {
-              "HANWHA QCELL Q.PEAK DUO BLK ML-GL10+410": 11,
-              "SOLAREDGE USE3800H-USMNBL75": 1
-            }
-          },
-          {
-            timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-            items: {
-              "SolarEdge P-Series": 38,
-              "SOLAREDGE U650 POWER OPTIMIZER": 37,
-              "SolarEdge S-Series": 39
-            }
-          },
-          {
-            timestamp: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString(),
-            items: {
-              "Tigo TS4-A-S": 32,
-              "Tigo TS4-A-O": 24
-            }
-          }
-        ]);
+        // Use fallback data from utils
+        const { FALLBACK_LOGS } = await import("@/utils/fallback-data")
+        setLogs(FALLBACK_LOGS);
       } finally {
         setLoading(false);
       }
     };
 
     fetchLogs();
-  }, []);
+  }, [router]);
 
 
 

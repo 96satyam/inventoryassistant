@@ -19,10 +19,22 @@ from typing import Any, Dict
 # Import your compiled LangGraph
 #   Adjust the import below if you renamed / relocated libs.core.graph
 # ────────────────────────────────────────────────────────────────────────────────
+import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 from libs.core.graph import build_pipeline  # <- adjust if needed
 
-# Compile once (expensive LLM chains, etc.) and reuse
-_PIPELINE = build_pipeline()
+# Lazy loading: compile pipeline only when first needed
+_PIPELINE = None
+
+def _get_pipeline():
+    """Get the pipeline, building it lazily on first access."""
+    global _PIPELINE
+    if _PIPELINE is None:
+        print("🔧 Building pipeline for first time...")
+        _PIPELINE = build_pipeline()
+        print("✅ Pipeline built successfully!")
+    return _PIPELINE
 
 
 # ────────────────────────────────────────────────────────────────────────────────
@@ -50,7 +62,8 @@ def run_pipeline_from_pdf(pdf_path: str) -> Dict[str, Any]:
         raise FileNotFoundError(path)
 
     # Invoke graph – returns a mutable PipelineState (dict subclass)
-    state = _PIPELINE.invoke({"pdf_path": str(path)})
+    pipeline = _get_pipeline()
+    state = pipeline.invoke({"pdf_path": str(path)})
 
     # Convert any Pydantic models to plain dicts for FastAPI / JSON
     def _serialise(v: Any):

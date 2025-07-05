@@ -2,25 +2,38 @@
 
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
+import { getAuthState, isSessionInitialized } from "@/utils/authMiddleware"
 
 export default function Home() {
   const router = useRouter()
 
   useEffect(() => {
-    // Automatically redirect to dashboard on page load
+    // Check if this is a fresh browser session (no session initialized)
+    if (!isSessionInitialized()) {
+      // Fresh session - redirect to login to initialize
+      router.replace("/login")
+      return
+    }
+
+    // Session is initialized - check authentication
+    const authState = getAuthState()
+
+    if (!authState.isAuthenticated || !authState.user) {
+      // Session initialized but not authenticated - redirect to login
+      router.replace("/login")
+      return
+    }
+
+    // Valid authenticated session - redirect to dashboard
     router.replace("/dashboard")
   }, [router])
 
-  // Show a brief loading message while redirecting
+  // Show loading state while redirecting
   return (
-    <div className="flex items-center justify-center min-h-[50vh]">
+    <div className="flex items-center justify-center min-h-screen">
       <div className="text-center">
-        <div className="inline-flex items-center gap-3 px-6 py-4 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700">
-          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-orange-600"></div>
-          <span className="font-medium text-slate-700 dark:text-slate-300">
-            Redirecting to Dashboard...
-          </span>
-        </div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600 mx-auto mb-4"></div>
+        <p className="text-slate-600 dark:text-slate-300">Redirecting...</p>
       </div>
     </div>
   )

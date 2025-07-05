@@ -11,7 +11,9 @@ from libs.core.vendor_maps import vendor_map, eta_map
 VENDOR_MAP: Dict[str, str] = vendor_map()
 ETA_MAP:    Dict[str, str] = eta_map()
 
-DATA_DIR       = Path("data")
+# Get the project root directory (where data folder is located)
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+DATA_DIR       = PROJECT_ROOT / "data"
 INVENTORY_FILE = DATA_DIR / "Inventry.xlsx"
 HISTORY_FILE   = DATA_DIR / "install_history.xlsx"
 

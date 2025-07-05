@@ -28,7 +28,10 @@ def load_inventory(path: str | None = None) -> pd.DataFrame:
     Other modules can then choose the columns they need.
     """
     if path is None:
-        path = os.path.join("data", "Inventry.xlsx")
+        # Get the project root directory (where data folder is located)
+        from pathlib import Path
+        PROJECT_ROOT = Path(__file__).resolve().parents[2]
+        path = PROJECT_ROOT / "data" / "Inventry.xlsx"
     if not os.path.exists(path):
         raise FileNotFoundError(f"Inventory file not found at {path}")
 

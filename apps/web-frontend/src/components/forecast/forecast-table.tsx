@@ -41,7 +41,8 @@ export default function ForecastTable() {
     const fetchForecast = async () => {
       setLoading(true)
       try {
-        const res = await fetch("http://localhost:8000/forecast/")
+        const { apiFetch, API_ENDPOINTS } = await import("@/lib/api-config")
+        const res = await apiFetch(API_ENDPOINTS.FORECAST)
 
         if (!res.ok) {
           throw new Error(`HTTP error! status: ${res.status}`)

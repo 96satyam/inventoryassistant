@@ -7,7 +7,7 @@ import tempfile
 
 # ── Third-Party ─────────────────────────────────────────────────────
 from dotenv import load_dotenv
-from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 # ── Internal Imports ────────────────────────────────────────────────
@@ -16,13 +16,13 @@ from .routes.inventry import router as inventory_router   # Rename file if neede
 from .routes.procurement import router as procurement_router
 from .routes.forecast import router as forecast_router
 from .routes.stats import router as stats_router
-from .services import suggestions
-from apps.api_core.app.routes import suggestions_routes
-from apps.api_core.app.routes import forecast_top5
-from apscheduler.schedulers.background import BackgroundScheduler
-from libs.core.forecast import forecast_shortages
-from libs.core.suggestions import suggest_purchase_orders
-from apps.api_core.app.routes import whatsapp_routes
+# from .services import suggestions
+from .routes import suggestions_routes
+# from apps.api_core.app.routes import forecast_top5
+# from apscheduler.schedulers.background import BackgroundScheduler
+# from libs.core.forecast import forecast_shortages
+# from libs.core.suggestions import suggest_purchase_orders
+# from apps.api_core.app.routes import whatsapp_routes
 
 
 
@@ -63,14 +63,19 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# ── Health Check Endpoint ──────────────────────────────────────────
+@app.get("/health")
+def health_check():
+    return {"status": "healthy", "message": "Solar Installer API is running"}
+
 # ── Register All API Routers ────────────────────────────────────────
 app.include_router(inventory_router)
 app.include_router(procurement_router)
 app.include_router(forecast_router)
 app.include_router(stats_router)
 app.include_router(suggestions_routes.router)
-app.include_router(forecast_top5.router)
-app.include_router(whatsapp_routes.router)
+# app.include_router(forecast_top5.router)
+# app.include_router(whatsapp_routes.router)
 
 
 # ── Health Check Routes ─────────────────────────────────────────────
@@ -88,12 +93,26 @@ async def run_pipeline(file: UploadFile = File(...)):
     """
     Accepts a PDF file and runs the AI extraction pipeline on it.
     """
+    import tempfile
+    import pathlib
+
+    # Validate file type
+    if not file.filename or not file.filename.lower().endswith('.pdf'):
+        raise HTTPException(status_code=400, detail="Only PDF files are supported")
+
     with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
         tmp.write(await file.read())
         tmp_path = pathlib.Path(tmp.name)
 
     try:
+        print(f"🚀 Processing PDF: {file.filename}")
         result = run_pipeline_from_pdf(str(tmp_path))
+        print(f"✅ Pipeline completed successfully")
         return result
+    except Exception as e:
+        print(f"❌ Pipeline failed: {str(e)}")
+        # Clean up the temp file even if pipeline fails
+        tmp_path.unlink(missing_ok=True)
+        raise HTTPException(status_code=500, detail=f"Pipeline failed: {str(e)}")
     finally:
         tmp_path.unlink(missing_ok=True)

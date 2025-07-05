@@ -7,11 +7,17 @@
  * Check if clipboard API is available
  */
 export function isClipboardSupported(): boolean {
-  return (
-    typeof navigator !== 'undefined' &&
-    navigator.clipboard &&
-    typeof navigator.clipboard.writeText === 'function'
-  );
+  try {
+    return (
+      typeof navigator !== 'undefined' &&
+      navigator.clipboard &&
+      typeof navigator.clipboard.writeText === 'function' &&
+      window.isSecureContext // Clipboard API requires secure context
+    );
+  } catch (error) {
+    // Silently handle any errors
+    return false;
+  }
 }
 
 /**
@@ -31,7 +37,7 @@ export async function copyToClipboard(text: string): Promise<boolean> {
     // Fallback method for older browsers
     return copyToClipboardFallback(text);
   } catch (error) {
-    console.warn('⚠️ Clipboard API failed, trying fallback:', error);
+    // Silently try fallback without logging errors to avoid console spam
     return copyToClipboardFallback(text);
   }
 }
@@ -50,23 +56,23 @@ function copyToClipboardFallback(text: string): boolean {
     textarea.style.left = '-999999px';
     textarea.style.top = '-999999px';
     document.body.appendChild(textarea);
-    
+
     // Select and copy the text
     textarea.focus();
     textarea.select();
-    
+
     const successful = document.execCommand('copy');
     document.body.removeChild(textarea);
-    
+
     if (successful) {
       console.log('✅ Text copied to clipboard via fallback method');
       return true;
     } else {
-      console.error('❌ Fallback clipboard copy failed');
+      // Silently fail without logging errors
       return false;
     }
   } catch (error) {
-    console.error('❌ Fallback clipboard copy error:', error);
+    // Silently fail without logging errors
     return false;
   }
 }
@@ -99,13 +105,13 @@ export async function copyWithFeedback(
  */
 export async function getClipboardPermissions(): Promise<PermissionState | 'unsupported'> {
   try {
-    if (typeof navigator !== 'undefined' && navigator.permissions) {
+    if (typeof navigator !== 'undefined' && navigator.permissions && window.isSecureContext) {
       const permission = await navigator.permissions.query({ name: 'clipboard-write' as PermissionName });
       return permission.state;
     }
     return 'unsupported';
   } catch (error) {
-    console.warn('⚠️ Could not check clipboard permissions:', error);
+    // Silently fail without logging errors
     return 'unsupported';
   }
 }
