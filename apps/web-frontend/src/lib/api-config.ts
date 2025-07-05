@@ -1,12 +1,13 @@
 /**
  * API Configuration Utility
- * Provides environment-aware API URLs for production and development
+ * Provides environment-aware API URLs for local, network, and public deployment
  */
+
+import { detectEnvironment, logEnvironmentInfo } from '@/utils/environment';
 
 /**
  * Get the base API URL based on environment
- * In development: http://localhost:8003 (temporary port change)
- * In production: Uses current hostname with port 8003
+ * Enhanced logic for local, network, and public deployment
  */
 export function getApiBaseUrl(): string {
   if (typeof window === 'undefined') {
@@ -14,20 +15,26 @@ export function getApiBaseUrl(): string {
     return 'http://localhost:8003';
   }
 
-  if (process.env.NODE_ENV === 'production') {
-    // Production - use current hostname with API port
-    return `${window.location.protocol}//${window.location.hostname}:8003`;
+  // Check for explicit environment variables
+  if (typeof window !== 'undefined' && (window as any).API_BASE_URL) {
+    return (window as any).API_BASE_URL;
   }
 
-  // Development - check if we're on network access
-  const hostname = window.location.hostname;
-  if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
-    // Network access - use current hostname
-    return `${window.location.protocol}//${hostname}:8003`;
+  // Use environment detection utility
+  const env = detectEnvironment();
+
+  // Log environment info for debugging (only in development)
+  if (process.env.NODE_ENV === 'development') {
+    logEnvironmentInfo();
   }
 
-  // Local development - use localhost
-  return 'http://localhost:8003';
+  // Build API URL based on detected environment
+  const apiUrl = `${env.protocol}//${env.hostname}:8003`;
+
+  console.log(`🌐 API Config: ${env.deploymentType} deployment detected`);
+  console.log(`📡 API URL: ${apiUrl}`);
+
+  return apiUrl;
 }
 
 /**

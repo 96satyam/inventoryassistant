@@ -42,18 +42,35 @@ app = FastAPI(
 )
 
 # ── CORS Setup ──────────────────────────────────────────────────────
-origins = [
-    "http://localhost",
-    "http://127.0.0.1",
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "http://localhost:3001",
-    "http://127.0.0.1:3001",
-    "http://localhost:3002",
-    "http://192.168.0.80:3000",
-    "http://192.168.0.80:3001",
-    "http://192.168.0.80:3002",
-]
+# Enhanced CORS configuration for both local and public deployment
+def get_cors_origins():
+    """Get CORS origins based on environment"""
+    base_origins = [
+        "http://localhost",
+        "http://127.0.0.1",
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:3001",
+        "http://127.0.0.1:3001",
+        "http://localhost:3002",
+        "http://192.168.0.80:3000",
+        "http://192.168.0.80:3001",
+        "http://192.168.0.80:3002",
+        # Add common local network ranges
+        "http://172.20.10.3:3000",
+        "http://172.20.10.3:3001",
+        "http://172.20.10.3:3002",
+    ]
+
+    # Check if we're in production or public deployment
+    env = os.getenv("ENVIRONMENT", "development")
+    if env == "production" or os.getenv("ALLOW_ALL_ORIGINS", "false").lower() == "true":
+        # For public deployment, allow all origins
+        return ["*"]
+
+    return base_origins
+
+origins = get_cors_origins()
 
 app.add_middleware(
     CORSMiddleware,
