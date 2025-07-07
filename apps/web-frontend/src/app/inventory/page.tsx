@@ -147,7 +147,7 @@ export default function InventoryPage() {
                 Warehouse Inventory
               </h2>
               <p className="text-slate-600 dark:text-slate-300">
-                Monitor your solar component stock levels in real-time with automated refresh every 10 seconds
+                Monitor your solar component stock levels in real-time with automated refresh every 30 seconds
               </p>
             </div>
             <InventoryTable />

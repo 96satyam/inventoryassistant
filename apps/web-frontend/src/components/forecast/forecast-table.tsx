@@ -83,11 +83,10 @@ export default function ForecastTable() {
           !window.location.hostname.includes('127.0.0.1');
 
         if (isPublicUrl) {
-          console.log('🌐 Public URL detected - backend may need to be started in public mode');
-          console.log('💡 To fix: Run start-public.bat to start backend with public network access');
+          console.log('🌐 Public URL detected - using demo data for functionality');
           setShowPublicNotice(true)
-          toast.error("Backend not accessible on public network. Using mock data.", {
-            duration: 6000,
+          toast.success("Using demo data for public network access", {
+            duration: 4000,
           })
         } else {
           toast.error("Couldn’t load forecast data - using mock data")

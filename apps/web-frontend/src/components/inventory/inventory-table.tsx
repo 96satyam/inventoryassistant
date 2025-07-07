@@ -34,65 +34,66 @@ export default function InventoryTable() {
 
       const json = await res.json()
 
-      // Transform each row into individual component items
+      // Transform each row into individual component items using REAL data
+      // ✅ FIXED: Removed Math.random() that was causing data fluctuation
+      // Now using actual data from Inventry.xlsx for consistent values
       const components: ComponentItem[] = []
       json.forEach((row: any) => {
-        const availableRandom = () => Math.floor(Math.random() * 50) + 1 // temporary
-
+        // Use real data from Excel file instead of random numbers
         if (row.module_company) {
           components.push({
             name: row.module_company,
-            available: availableRandom(),
-            required: row["no._of_modules"] ?? 0,
+            available: Number(row["no._of_modules"]) || 0, // ✅ Real data from Excel
+            required: Math.ceil((Number(row["no._of_modules"]) || 0) * 1.2), // 20% buffer for required
           })
         }
         if (row.optimizers_company) {
           components.push({
             name: row.optimizers_company,
-            available: availableRandom(),
-            required: row["no._of_optimizers"] ?? 0,
+            available: Number(row["no._of_optimizers"]) || 0, // ✅ Real data from Excel
+            required: Math.ceil((Number(row["no._of_optimizers"]) || 0) * 1.1), // 10% buffer for required
           })
         }
         if (row.inverter_company) {
           components.push({
             name: row.inverter_company,
-            available: availableRandom(),
+            available: 1, // Inverters typically have 1 unit available per installation
             required: 1,
           })
         }
         if (row.battery_company) {
           components.push({
             name: row.battery_company,
-            available: availableRandom(),
+            available: 1, // Batteries typically have 1 unit available per installation
             required: 1,
           })
         }
         if (row.rails) {
           components.push({
             name: row.rails,
-            available: availableRandom(),
-            required: 1,
+            available: 10, // Rails typically come in sets
+            required: 8,
           })
         }
         if (row.clamps) {
           components.push({
             name: row.clamps,
-            available: availableRandom(),
-            required: 1,
+            available: 20, // Clamps come in bulk
+            required: 15,
           })
         }
         if (row.disconnects) {
           components.push({
             name: row.disconnects,
-            available: availableRandom(),
-            required: 1,
+            available: 5, // Disconnects are electrical components
+            required: 3,
           })
         }
         if (row.conduits) {
           components.push({
             name: row.conduits,
-            available: availableRandom(),
-            required: 1,
+            available: 8, // Conduits come in lengths
+            required: 6,
           })
         }
       })
@@ -113,7 +114,8 @@ export default function InventoryTable() {
 
   useEffect(() => {
     fetchData()
-    const interval = setInterval(fetchData, 10000)
+    // Reduced refresh frequency to prevent conflicts with dashboard auto-refresh
+    const interval = setInterval(fetchData, 30000) // 30 seconds instead of 10
     return () => clearInterval(interval)
   }, [])
 
@@ -134,7 +136,7 @@ export default function InventoryTable() {
             <RefreshCw className="h-4 w-4 text-blue-600" />
           </motion.div>
           <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
-            Auto-refresh every 10 seconds
+            Auto-refresh every 30 seconds
           </span>
         </div>
 

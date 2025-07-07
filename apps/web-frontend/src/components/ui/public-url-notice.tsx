@@ -44,7 +44,7 @@ export default function PublicUrlNotice({ show, onClose }: PublicUrlNoticeProps)
 
         <div className="space-y-4">
           <p className="text-slate-600 dark:text-slate-300">
-            You're accessing the application from a public URL, but the backend is only configured for local access.
+            You're accessing the application from a public URL. The backend is only accessible locally, so the application is using mock data to maintain functionality.
           </p>
 
           <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-4">
@@ -55,10 +55,10 @@ export default function PublicUrlNotice({ show, onClose }: PublicUrlNoticeProps)
               </span>
             </div>
             <p className="text-sm text-orange-700 dark:text-orange-300 mb-3">
-              To enable public network access, restart the backend in public mode:
+              The application is currently using mock data. For real data access from public networks, the backend needs to be configured for external access.
             </p>
             <div className="bg-slate-900 rounded p-3 text-sm font-mono text-green-400">
-              start-public.bat
+              # Backend needs public network configuration
             </div>
           </div>
 
@@ -68,24 +68,18 @@ export default function PublicUrlNotice({ show, onClose }: PublicUrlNoticeProps)
               <span>Steps:</span>
             </h4>
             <ol className="text-sm text-slate-600 dark:text-slate-300 space-y-1 ml-6">
-              <li>1. Close the current backend server</li>
-              <li>2. Run <code className="bg-slate-100 dark:bg-slate-700 px-1 rounded">start-public.bat</code></li>
-              <li>3. Refresh this page</li>
+              <li>1. The application is using mock data for demonstration</li>
+              <li>2. All features remain functional with sample data</li>
+              <li>3. Local network access provides real data</li>
             </ol>
           </div>
 
           <div className="flex justify-end space-x-3 pt-4 border-t border-slate-200 dark:border-slate-700">
             <button
               onClick={handleClose}
-              className="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
-            >
-              Continue with Mock Data
-            </button>
-            <button
-              onClick={() => window.location.reload()}
               className="px-4 py-2 text-sm font-medium bg-orange-600 text-white rounded-lg hover:bg-orange-700"
             >
-              Refresh Page
+              Continue with Demo Data
             </button>
           </div>
         </div>

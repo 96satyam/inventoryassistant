@@ -1,5 +1,19 @@
 [
   {
+    "timestamp": "2025-07-07T18:19:08.148891",
+    "items": {
+      "HANWHA QCELL : Q.PEAK DUO BLK ML-GL10+410": 11,
+      "SOLAREDGE SOLAREDGE USE3800H-USMNBL75": 1
+    }
+  },
+  {
+    "timestamp": "2025-07-07T18:11:52.533554",
+    "items": {
+      "HANWHA QCELL : Q.PEAK DUO BLK ML-GL10+410": 16,
+      "TESLA POWERWALL 3 PV INTEGRATED": 1
+    }
+  },
+  {
     "timestamp": "2025-07-04T13:24:35.332074",
     "items": {
       "HANWHA QCELL : Q.PEAK DUO BLK ML-GL10+410": 12,
@@ -121,18 +135,6 @@
     "timestamp": "2025-06-30T12:52:18.890037",
     "items": {
       "HANWHA QCELL Q.PEAK DUO BLK ML-GL10+410": 11
-    }
-  },
-  {
-    "timestamp": "2025-06-30T12:36:21.962909",
-    "items": {
-      "HANWHA QCELL Q.PEAK DUO BLK ML-GL10+410": 11
-    }
-  },
-  {
-    "timestamp": "2025-06-30T12:23:17.053770",
-    "items": {
-      "HANWHA QCELL : Q.PEAK DUO BLK ML-GL10+410": 11
     }
   }
 ]
