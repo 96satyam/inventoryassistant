@@ -15,15 +15,19 @@ import {
   Database,
   Brain,
   ChevronDown,
+  ChevronRight,
   ExternalLink,
   Clock,
   AlertTriangle,
   Package,
-  ShoppingCart
+  ShoppingCart,
+  LayoutDashboard,
+  TrendingUp
 } from "lucide-react"
 import { useState, useEffect } from "react"
 import { useTheme } from "next-themes"
 import { useRouter, usePathname } from "next/navigation"
+import { apiFetch, API_ENDPOINTS, getApiBaseUrl } from "@/lib/api-config"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -52,6 +56,66 @@ interface TopbarProps {
   onSidebarToggle: () => void
 }
 
+// Navigation items for search
+const navigationItems = [
+  {
+    label: "Dashboard",
+    href: "/",
+    icon: LayoutDashboard,
+    description: "Overview & Analytics",
+    keywords: ["dashboard", "overview", "analytics", "home", "main"]
+  },
+  {
+    label: "Equipment Extractor",
+    href: "/extract",
+    icon: Search,
+    description: "AI Document Analysis",
+    keywords: ["extract", "equipment", "document", "analysis", "ai", "pdf", "upload"]
+  },
+  {
+    label: "Inventory Checker",
+    href: "/inventory",
+    icon: Package,
+    description: "Stock Management",
+    keywords: ["inventory", "stock", "management", "items", "warehouse", "parts"]
+  },
+  {
+    label: "Procurement",
+    href: "/procurement",
+    icon: ShoppingCart,
+    description: "Automated Ordering",
+    keywords: ["procurement", "ordering", "purchase", "po", "supplier", "buy"]
+  },
+  {
+    label: "Demand Forecasting",
+    href: "/forecast",
+    icon: TrendingUp,
+    description: "Predictive Analytics",
+    keywords: ["forecast", "demand", "prediction", "analytics", "future", "trends"]
+  },
+  {
+    label: "Profile",
+    href: "/profile",
+    icon: User,
+    description: "User Settings",
+    keywords: ["profile", "user", "settings", "account", "preferences"]
+  },
+  {
+    label: "System Settings",
+    href: "/system-settings",
+    icon: Settings,
+    description: "System Configuration",
+    keywords: ["system", "settings", "configuration", "admin", "setup"]
+  },
+  {
+    label: "Activity Log",
+    href: "/activity",
+    icon: Activity,
+    description: "System Activity",
+    keywords: ["activity", "log", "history", "events", "audit"]
+  }
+]
+
 export function Topbar({ onSidebarToggle }: TopbarProps) {
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
@@ -61,6 +125,11 @@ export function Topbar({ onSidebarToggle }: TopbarProps) {
   const [currentUser, setCurrentUser] = useState<any>(null)
   const router = useRouter()
   const pathname = usePathname()
+
+  // Search functionality state
+  const [searchQuery, setSearchQuery] = useState("")
+  const [searchResults, setSearchResults] = useState<typeof navigationItems>([])
+  const [showSearchResults, setShowSearchResults] = useState(false)
 
   // Fetch dashboard data for notifications
   const [dashboardData, setDashboardData] = useState({
@@ -87,7 +156,6 @@ export function Topbar({ onSidebarToggle }: TopbarProps) {
     const fetchDashboardData = async () => {
       try {
         // Try to fetch from API first
-        const { apiFetch, API_ENDPOINTS, getApiBaseUrl } = await import("@/lib/api-config")
         const {
           isBackendAvailable,
           FALLBACK_INVENTORY,
@@ -95,23 +163,24 @@ export function Topbar({ onSidebarToggle }: TopbarProps) {
           FALLBACK_LOGS
         } = await import("@/utils/fallback-data")
 
+        // Import data normalizer
+        const {
+          normalizeInventoryData,
+          normalizeForecastData,
+          normalizeProcurementLogs,
+          logDataSource
+        } = await import("@/utils/data-normalizer")
+
         // Check if backend is available
         const backendAvailable = await isBackendAvailable(getApiBaseUrl())
 
         if (!backendAvailable) {
           console.log('📡 Topbar: Using fallback data - backend not available')
-          // Use fallback data
+          // Use normalized fallback data
           setDashboardData({
-            inventory: FALLBACK_INVENTORY.map((r: any) => ({
-              name: String(r.name ?? 'Unknown'),
-              available: Number(r.available ?? 0),
-              required: Number(r.required ?? 0)
-            })),
-            forecast: FALLBACK_FORECAST.map((r: any) => ({
-              model: String(r.model ?? 'Unknown'),
-              qty: Number(r.qty ?? 0)
-            })),
-            logs: FALLBACK_LOGS
+            inventory: normalizeInventoryData(FALLBACK_INVENTORY),
+            forecast: normalizeForecastData(FALLBACK_FORECAST),
+            logs: normalizeProcurementLogs(FALLBACK_LOGS)
           })
           return
         }
@@ -123,17 +192,16 @@ export function Topbar({ onSidebarToggle }: TopbarProps) {
           apiFetch(API_ENDPOINTS.PROCUREMENT_LOGS).then(r => r.json()).catch(() => FALLBACK_LOGS)
         ])
 
+        // Log data sources for debugging
+        logDataSource('/inventory/', invRes, 'api')
+        logDataSource('/forecast/', forecastRes, 'api')
+        logDataSource('/procurement/logs', logsRes, 'api')
+
+        // Normalize all data for consistency
         setDashboardData({
-          inventory: Array.isArray(invRes) ? invRes.map((r: any) => ({
-            name: String(r.name ?? r.model ?? 'Unknown'),
-            available: Number(r.available ?? r.available_qty ?? 0),
-            required: Number(r.required ?? r.required_qty ?? 0)
-          })) : [],
-          forecast: Array.isArray(forecastRes) ? forecastRes.map((o: any) => ({
-            model: String(o.model ?? o.name ?? 'Unknown'),
-            qty: Number(o.qty ?? o.quantity ?? 0)
-          })) : [],
-          logs: Array.isArray(logsRes) ? logsRes : []
+          inventory: normalizeInventoryData(invRes),
+          forecast: normalizeForecastData(forecastRes),
+          logs: normalizeProcurementLogs(logsRes)
         })
       } catch (error) {
         console.warn('⚠️ Topbar: Failed to fetch dashboard data, using fallback:', error)
@@ -146,16 +214,9 @@ export function Topbar({ onSidebarToggle }: TopbarProps) {
         } = await import("@/utils/fallback-data")
 
         setDashboardData({
-          inventory: FALLBACK_INVENTORY.map((r: any) => ({
-            name: String(r.name ?? 'Unknown'),
-            available: Number(r.available ?? 0),
-            required: Number(r.required ?? 0)
-          })),
-          forecast: FALLBACK_FORECAST.map((r: any) => ({
-            model: String(r.model ?? 'Unknown'),
-            qty: Number(r.qty ?? 0)
-          })),
-          logs: FALLBACK_LOGS
+          inventory: normalizeInventoryData(FALLBACK_INVENTORY),
+          forecast: normalizeForecastData(FALLBACK_FORECAST),
+          logs: normalizeProcurementLogs(FALLBACK_LOGS)
         })
       }
     }
@@ -251,6 +312,46 @@ export function Topbar({ onSidebarToggle }: TopbarProps) {
     }
   }
 
+  // Search functionality
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const query = e.target.value
+    setSearchQuery(query)
+
+    if (query.trim() === "") {
+      setSearchResults([])
+      setShowSearchResults(false)
+      return
+    }
+
+    // Filter navigation items based on search query
+    const filtered = navigationItems.filter(item => {
+      const searchTerm = query.toLowerCase()
+      return (
+        item.label.toLowerCase().includes(searchTerm) ||
+        item.description.toLowerCase().includes(searchTerm) ||
+        item.keywords.some(keyword => keyword.includes(searchTerm))
+      )
+    })
+
+    setSearchResults(filtered)
+    setShowSearchResults(true)
+  }
+
+  const handleSearchSelect = (href: string) => {
+    router.push(href)
+    setSearchQuery("")
+    setShowSearchResults(false)
+  }
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && searchResults.length > 0) {
+      handleSearchSelect(searchResults[0].href)
+    } else if (e.key === 'Escape') {
+      setSearchQuery("")
+      setShowSearchResults(false)
+    }
+  }
+
   if (!mounted) return null
 
   return (
@@ -273,22 +374,75 @@ export function Topbar({ onSidebarToggle }: TopbarProps) {
             <Menu className="h-5 w-5" />
           </Button>
 
-          {/* Search Bar */}
+          {/* Dynamic Search Bar */}
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.3, delay: 0.1 }}
-            className="hidden md:flex items-center gap-2 bg-slate-100 dark:bg-slate-800 rounded-xl px-4 py-2 min-w-[300px] hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+            className="hidden md:flex items-center gap-2 bg-slate-100 dark:bg-slate-800 rounded-xl px-4 py-2 min-w-[300px] hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors relative"
           >
             <Search className="h-4 w-4 text-slate-500" />
             <input
               type="text"
+              value={searchQuery}
+              onChange={handleSearchChange}
+              onKeyDown={handleSearchKeyDown}
               placeholder="Search across all modules..."
               className="bg-transparent border-none outline-none text-sm text-slate-700 dark:text-slate-300 placeholder-slate-500 flex-1"
             />
             <Badge variant="secondary" className="text-xs">
               ⌘K
             </Badge>
+
+            {/* Search Results Dropdown */}
+            {showSearchResults && searchResults.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 z-50 max-h-80 overflow-y-auto"
+              >
+                {searchResults.map((item, index) => {
+                  const Icon = item.icon
+                  return (
+                    <motion.div
+                      key={item.href}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                      onClick={() => handleSearchSelect(item.href)}
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer transition-colors border-b border-slate-100 dark:border-slate-700 last:border-b-0"
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                        <Icon className="h-4 w-4 text-white" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                          {item.label}
+                        </p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">
+                          {item.description}
+                        </p>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-slate-400" />
+                    </motion.div>
+                  )
+                })}
+              </motion.div>
+            )}
+
+            {/* No Results Message */}
+            {showSearchResults && searchResults.length === 0 && searchQuery.trim() !== "" && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 z-50 p-4 text-center"
+              >
+                <p className="text-sm text-slate-500 dark:text-slate-400">
+                  No modules found for "{searchQuery}"
+                </p>
+              </motion.div>
+            )}
           </motion.div>
         </div>
 

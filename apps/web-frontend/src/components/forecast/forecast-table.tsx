@@ -21,6 +21,8 @@ import {
   Flame
 } from "lucide-react"
 import toast from "react-hot-toast"
+import { apiFetch, API_ENDPOINTS } from "@/lib/api-config"
+import PublicUrlNotice from "@/components/ui/public-url-notice"
 
 /* ---------- types ---------- */
 type ForecastRow = {
@@ -35,13 +37,13 @@ export default function ForecastTable() {
   const [rows,    setRows]    = useState<ForecastRow[]>([])
   const [loading, setLoading] = useState(true)
   const [sending, setSending] = useState(false)
+  const [showPublicNotice, setShowPublicNotice] = useState(false)
 
   /* fetch once on mount */
   useEffect(() => {
     const fetchForecast = async () => {
       setLoading(true)
       try {
-        const { apiFetch, API_ENDPOINTS } = await import("@/lib/api-config")
         const res = await apiFetch(API_ENDPOINTS.FORECAST)
 
         if (!res.ok) {
@@ -49,17 +51,70 @@ export default function ForecastTable() {
         }
 
         const json = await res.json()
-        setRows(Array.isArray(json) ? json : [])
+
+        // Import data normalizer
+        const { normalizeForecastData, logDataSource, validateDataConsistency } = await import("@/utils/data-normalizer")
+
+        // Log data source for debugging
+        logDataSource('/forecast/', json)
+
+        // Validate and normalize data
+        if (validateDataConsistency(json, 'forecast')) {
+          const normalizedData = normalizeForecastData(json)
+          // Convert to ForecastRow format with required fields
+          const forecastRows: ForecastRow[] = normalizedData.map(item => ({
+            model: item.model,
+            qty: item.qty,
+            urgency: item.urgency ?? 0,
+            is_urgent: item.is_urgent ?? false
+          }))
+          setRows(forecastRows)
+          console.log('✅ Forecast: Successfully loaded and normalized', forecastRows.length, 'items')
+        } else {
+          console.warn('⚠️ Forecast: Invalid data format, using normalized empty array')
+          setRows([])
+        }
       } catch (err) {
-        console.error("Failed to load forecast:", err)
-        toast.error("Couldn’t load forecast data - using mock data")
-        // Set mock data for development
-        setRows([
+        console.error("❌ Forecast: Failed to load data:", err)
+
+        // Check if this is a public URL deployment issue
+        const isPublicUrl = typeof window !== 'undefined' &&
+          !window.location.hostname.includes('localhost') &&
+          !window.location.hostname.includes('127.0.0.1');
+
+        if (isPublicUrl) {
+          console.log('🌐 Public URL detected - backend may need to be started in public mode');
+          console.log('💡 To fix: Run start-public.bat to start backend with public network access');
+          setShowPublicNotice(true)
+          toast.error("Backend not accessible on public network. Using mock data.", {
+            duration: 6000,
+          })
+        } else {
+          toast.error("Couldn’t load forecast data - using mock data")
+        }
+
+        // Only log detailed error info if it's actually an Error object
+        if (err instanceof Error) {
+          console.error("❌ Forecast: Error message:", err.message)
+        }
+
+        // Use normalized mock data for development
+        const { normalizeForecastData } = await import("@/utils/data-normalizer")
+        const mockData = [
           { model: "SolarEdge Modules", qty: 25, urgency: 5, is_urgent: true },
           { model: "Enphase Microinverters", qty: 15, urgency: 3, is_urgent: false },
           { model: "Tesla Powerwall", qty: 8, urgency: 7, is_urgent: true },
           { model: "IronRidge Rails", qty: 12, urgency: 2, is_urgent: false },
-        ])
+        ]
+        const normalizedMockData = normalizeForecastData(mockData)
+        const mockRows: ForecastRow[] = normalizedMockData.map(item => ({
+          model: item.model,
+          qty: item.qty,
+          urgency: item.urgency ?? 0,
+          is_urgent: item.is_urgent ?? false
+        }))
+        setRows(mockRows)
+        console.log('🔄 Forecast: Using normalized mock data as fallback')
       } finally {
         setLoading(false)
       }
@@ -78,7 +133,7 @@ export default function ForecastTable() {
   try {
     const res = await fetch("/api/forecast/send-url");
 
-    if (!res.ok) throw new Error("Invalid response");
+    if (!res.ok) throw new Error(`Invalid response: ${res.status}`);
 
     const contentType = res.headers.get("content-type");
     if (!contentType || !contentType.includes("application/json")) {
@@ -95,7 +150,13 @@ export default function ForecastTable() {
       toast.error("No WhatsApp URL received");
     }
   } catch (err) {
-    console.error("WhatsApp error:", err);
+    console.error("📱 WhatsApp: Error occurred:", err);
+
+    // Only log detailed error info if it's actually an Error object
+    if (err instanceof Error) {
+      console.error("📱 WhatsApp: Error message:", err.message)
+    }
+
     toast.error("WhatsApp launch failed");
   } finally {
     setSending(false);
@@ -290,6 +351,11 @@ export default function ForecastTable() {
           </TableBody>
         </Table>
       )}
+
+      <PublicUrlNotice
+        show={showPublicNotice}
+        onClose={() => setShowPublicNotice(false)}
+      />
     </div>
   )
 }

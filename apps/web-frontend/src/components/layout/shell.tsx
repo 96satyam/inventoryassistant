@@ -8,13 +8,19 @@ import { Sidebar } from "./sidebar"
 
 export default function Shell({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-700">
       {/* Enhanced Layout Structure */}
       <div className="flex h-screen overflow-hidden">
         {/* Sidebar */}
-        <Sidebar isOpen={sidebarOpen} onToggle={setSidebarOpen} />
+        <Sidebar
+          isOpen={sidebarOpen}
+          onToggle={setSidebarOpen}
+          isCollapsed={sidebarCollapsed}
+          onCollapse={setSidebarCollapsed}
+        />
 
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col overflow-hidden">

@@ -4,10 +4,11 @@ import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import Shell from './shell'
 import { getAuthState } from '@/utils/authMiddleware'
-import {
-  initializeErrorSuppression,
-  setupGlobalErrorHandler
-} from '@/utils/error-suppression'
+// Temporarily disabled to fix RSC bundler conflicts
+// import {
+//   initializeErrorSuppression,
+//   setupGlobalErrorHandler
+// } from '@/utils/error-suppression'
 
 interface AuthLayoutProps {
   children: React.ReactNode
@@ -23,9 +24,9 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
   const isPublicRoute = publicRoutes.includes(pathname)
 
   useEffect(() => {
-    // Initialize error suppression for network environments
-    initializeErrorSuppression()
-    setupGlobalErrorHandler()
+    // Temporarily disable error suppression to fix RSC bundler conflicts
+    // initializeErrorSuppression()
+    // setupGlobalErrorHandler()
 
     const checkAuth = () => {
       const authState = getAuthState()

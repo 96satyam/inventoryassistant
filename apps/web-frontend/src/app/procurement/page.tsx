@@ -7,6 +7,7 @@ import ProcurementTable from "@/components/procurement/procurement-table"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { getAuthState } from "@/utils/authMiddleware"
+import { apiFetch, API_ENDPOINTS, getApiBaseUrl } from "@/lib/api-config"
 
 export default function ProcurementPage() {
   const router = useRouter()
@@ -25,7 +26,6 @@ export default function ProcurementPage() {
       setLoading(true);
       try {
         // Use API config for consistent endpoint management
-        const { apiFetch, API_ENDPOINTS } = await import("@/lib/api-config")
         const {
           isBackendAvailable,
           getDataWithFallback,
@@ -33,7 +33,6 @@ export default function ProcurementPage() {
         } = await import("@/utils/fallback-data")
 
         // Check if backend is available
-        const { getApiBaseUrl } = await import("@/lib/api-config")
         const backendAvailable = await isBackendAvailable(getApiBaseUrl())
 
         if (!backendAvailable) {

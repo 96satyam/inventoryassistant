@@ -48,12 +48,14 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
+  CartesianGrid,
 } from 'recharts'
 import { saveAs } from 'file-saver'
 import { cn } from '@/lib/utils'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import { formatDate } from '@/lib/date'
+import { useAutoRefreshTimer } from '@/hooks/useAutoRefreshTimer'
 
 import Header      from '@/components/ui/header'
 import Suggestions from '@/components/suggestions'
@@ -113,7 +115,17 @@ export default function DashboardPage() {
   const [lowStockOpen, setLowStockOpen] = useState(false)
   const [forecastedOpen, setForecastedOpen] = useState(false)
 
-  /* ---- API pull ---- */
+  /* Auto-refresh timer */
+  const { timeLeft, isActive, progress } = useAutoRefreshTimer({
+    interval: 20,
+    onRefresh: () => {
+      console.log('🔄 Auto-refresh triggered')
+      pullAll()
+    },
+    autoStart: true
+  })
+
+  /* ---- API pull with enhanced data consistency ---- */
   const pullAll = async () => {
     try {
       const { apiFetch, API_ENDPOINTS, getApiBaseUrl } = await import("@/lib/api-config")
@@ -125,73 +137,95 @@ export default function DashboardPage() {
         FALLBACK_FORECAST,
         FALLBACK_LOGS
       } = await import("@/utils/fallback-data")
+      const {
+        normalizeInventoryData,
+        normalizeForecastData,
+        normalizeStatsData,
+        normalizeProcurementLogs,
+        logDataSource,
+        validateDataConsistency
+      } = await import("@/utils/data-normalizer")
 
       // Check if backend is available
       const backendAvailable = await isBackendAvailable(getApiBaseUrl())
 
       if (!backendAvailable) {
-        // Use fallback data
-        setStats(FALLBACK_STATS)
-        setInv(normaliseInventory(FALLBACK_INVENTORY))
-        setForecast(FALLBACK_FORECAST)
-        setLogs(FALLBACK_LOGS)
+        console.log('📡 Dashboard: Backend not available, using fallback data')
+        // Use normalized fallback data
+        setStats(normalizeStatsData(FALLBACK_STATS))
+        setInv(normaliseInventory(normalizeInventoryData(FALLBACK_INVENTORY)))
+        setForecast(normalizeForecastData(FALLBACK_FORECAST))
+        setLogs(normalizeProcurementLogs(FALLBACK_LOGS))
         return
       }
 
-      // Try to fetch from backend
+      // Try to fetch from backend with enhanced error handling
       const [s, i, f, l] = await Promise.all([
         getDataWithFallback(
-          () => apiFetch(API_ENDPOINTS.STATS).then(r => r.json()),
+          async () => {
+            const response = await apiFetch(API_ENDPOINTS.STATS)
+            const data = await response.json()
+            logDataSource('/stats/', data)
+            return validateDataConsistency(data, 'stats') ? data : FALLBACK_STATS
+          },
           FALLBACK_STATS
         ),
         getDataWithFallback(
-          () => apiFetch(API_ENDPOINTS.INVENTORY).then(r => r.json()),
+          async () => {
+            const response = await apiFetch(API_ENDPOINTS.INVENTORY)
+            const data = await response.json()
+            logDataSource('/inventory/', data)
+            return validateDataConsistency(data, 'inventory') ? data : FALLBACK_INVENTORY
+          },
           FALLBACK_INVENTORY
         ),
         getDataWithFallback(
-          () => apiFetch(API_ENDPOINTS.FORECAST).then(r => r.json()),
+          async () => {
+            const response = await apiFetch(API_ENDPOINTS.FORECAST)
+            const data = await response.json()
+            logDataSource('/forecast/', data)
+            return validateDataConsistency(data, 'forecast') ? data : FALLBACK_FORECAST
+          },
           FALLBACK_FORECAST
         ),
         getDataWithFallback(
-          () => apiFetch(API_ENDPOINTS.PROCUREMENT_LOGS).then(r => r.json()),
+          async () => {
+            const response = await apiFetch(API_ENDPOINTS.PROCUREMENT_LOGS)
+            const data = await response.json()
+            logDataSource('/procurement/logs', data)
+            return validateDataConsistency(data, 'logs') ? data : FALLBACK_LOGS
+          },
           FALLBACK_LOGS
         ),
       ])
 
-      setStats(s)
-      setInv(normaliseInventory(i ?? []))
+      // Normalize all data for consistency
+      setStats(normalizeStatsData(s))
+      setInv(normaliseInventory(normalizeInventoryData(i ?? [])))
+      setForecast(normalizeForecastData(f))
+      setLogs(normalizeProcurementLogs(l))
 
-
-      /* --- normalise forecast --- */
-      const parsed: ForecastRow[] = Array.isArray(f)
-        ? f.map((o: any) => ({
-            model: String(o.model ?? o.name ?? 'Unknown'),
-            qty  : Number(o.qty ?? o.quantity ?? 0) || 0,
-          }))
-        : f && typeof f === 'object'
-          ? Object.entries(f).map(([m, q]) => ({
-              model: String(m),
-              qty  : Number(q) || 0,
-            }))
-          : []
-
-      setForecast(parsed)
-      setLogs(Array.isArray(l) ? l : [])
     } catch (error) {
       console.error('Dashboard data fetch error:', error)
 
-      // Load fallback data on error
+      // Load normalized fallback data on error
       const {
         FALLBACK_STATS,
         FALLBACK_INVENTORY,
         FALLBACK_FORECAST,
         FALLBACK_LOGS
       } = await import("@/utils/fallback-data")
+      const {
+        normalizeInventoryData,
+        normalizeForecastData,
+        normalizeStatsData,
+        normalizeProcurementLogs
+      } = await import("@/utils/data-normalizer")
 
-      setStats(FALLBACK_STATS)
-      setInv(normaliseInventory(FALLBACK_INVENTORY))
-      setForecast(FALLBACK_FORECAST)
-      setLogs(FALLBACK_LOGS)
+      setStats(normalizeStatsData(FALLBACK_STATS))
+      setInv(normaliseInventory(normalizeInventoryData(FALLBACK_INVENTORY)))
+      setForecast(normalizeForecastData(FALLBACK_FORECAST))
+      setLogs(normalizeProcurementLogs(FALLBACK_LOGS))
     } finally {
       setLoading(false)
     }
@@ -309,32 +343,47 @@ export default function DashboardPage() {
           className="relative"
         >
           <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-indigo-600/10 rounded-2xl blur-xl" />
-          <div className="relative bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl border border-white/20 shadow-xl p-8">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                  🧠 Smart Inventory Assistant
+          <div className="relative bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl border border-white/20 shadow-xl p-5">
+            {/* Header - Enhanced Structure */}
+            <div className="flex flex-col md:flex-row md:items-start md:justify-between mb-3">
+              <div className="flex-1">
+                <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-1">
+                  Smart Inventory Assistant
                 </h1>
-                <p className="text-slate-600 dark:text-slate-300 mt-2 text-lg">
+                <p className="text-slate-600 dark:text-slate-300 text-base leading-relaxed">
                   AI-powered inventory management with predictive analytics
                 </p>
               </div>
-              <div className="hidden md:flex items-center space-x-4">
-                <div className="flex items-center space-x-2 bg-green-100 dark:bg-green-900/30 px-4 py-2 rounded-full">
-                  <Activity className="h-4 w-4 text-green-600 animate-pulse" />
-                  <span className="text-sm font-medium text-green-700 dark:text-green-300">Live Data</span>
-                </div>
-                <div className="flex items-center space-x-2 bg-blue-100 dark:bg-blue-900/30 px-4 py-2 rounded-full">
-                  <Clock className="h-4 w-4 text-blue-600" />
-                  <span className="text-sm font-medium text-blue-700 dark:text-blue-300">Auto-refresh: 20s</span>
+              <div className="flex items-center space-x-3 mt-3 md:mt-0">
+                {/* Live Data - Clickable to navigate to analytics */}
+                <Link href="/analytics">
+                  <div className="flex items-center space-x-2 bg-green-50 dark:bg-green-900/20 px-3 py-1.5 rounded-lg border border-green-200 dark:border-green-800 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors cursor-pointer group">
+                    <Activity className="h-3.5 w-3.5 text-green-600 animate-pulse group-hover:scale-110 transition-transform" />
+                    <span className="text-xs font-semibold text-green-700 dark:text-green-300">Live Data</span>
+                  </div>
+                </Link>
+
+                {/* Auto-refresh Timer - Dynamic countdown */}
+                <div className="flex items-center space-x-2 bg-blue-50 dark:bg-blue-900/20 px-3 py-1.5 rounded-lg border border-blue-200 dark:border-blue-800 relative overflow-hidden">
+                  {/* Progress bar background */}
+                  <div
+                    className="absolute inset-0 bg-blue-200 dark:bg-blue-800 transition-all duration-1000 ease-linear"
+                    style={{ width: `${progress}%` }}
+                  />
+                  <div className="relative flex items-center space-x-2">
+                    <Clock className={`h-3.5 w-3.5 text-blue-600 ${isActive ? 'animate-spin' : ''}`} />
+                    <span className="text-xs font-semibold text-blue-700 dark:text-blue-300">
+                      Auto-refresh: {timeLeft}s
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
 
             {/* Quick Stats Bar */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <div
-                className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-4 text-white cursor-pointer hover:from-blue-600 hover:to-blue-700 transition-all duration-200 transform hover:scale-105"
+                className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-3 text-white cursor-pointer hover:from-blue-600 hover:to-blue-700 transition-all duration-200 transform hover:scale-105"
                 onClick={() => setTotalSKUsOpen(true)}
               >
                 <div className="flex items-center justify-between">
@@ -346,7 +395,7 @@ export default function DashboardPage() {
                 </div>
               </div>
               <div
-                className="bg-gradient-to-r from-green-500 to-green-600 rounded-xl p-4 text-white cursor-pointer hover:from-green-600 hover:to-green-700 transition-all duration-200 transform hover:scale-105"
+                className="bg-gradient-to-r from-green-500 to-green-600 rounded-xl p-3 text-white cursor-pointer hover:from-green-600 hover:to-green-700 transition-all duration-200 transform hover:scale-105"
                 onClick={() => setHealthyStockOpen(true)}
               >
                 <div className="flex items-center justify-between">
@@ -358,7 +407,7 @@ export default function DashboardPage() {
                 </div>
               </div>
               <div
-                className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl p-4 text-white cursor-pointer hover:from-orange-600 hover:to-orange-700 transition-all duration-200 transform hover:scale-105"
+                className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl p-3 text-white cursor-pointer hover:from-orange-600 hover:to-orange-700 transition-all duration-200 transform hover:scale-105"
                 onClick={() => setLowStockOpen(true)}
               >
                 <div className="flex items-center justify-between">
@@ -370,7 +419,7 @@ export default function DashboardPage() {
                 </div>
               </div>
               <div
-                className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl p-4 text-white cursor-pointer hover:from-purple-600 hover:to-purple-700 transition-all duration-200 transform hover:scale-105"
+                className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl p-3 text-white cursor-pointer hover:from-purple-600 hover:to-purple-700 transition-all duration-200 transform hover:scale-105"
                 onClick={() => setForecastedOpen(true)}
               >
                 <div className="flex items-center justify-between">
@@ -385,13 +434,15 @@ export default function DashboardPage() {
           </div>
         </motion.div>
 
-        {/* Enhanced KPI GRID */}
+        {/* Enhanced KPI GRID - Reorganized Layout */}
         <motion.section
-          className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6"
+          className="grid lg:grid-cols-2 gap-6"
           initial="hidden"
           animate="show"
           variants={{ hidden: {}, show: { transition: { staggerChildren: 0.15 } } }}
         >
+          {/* Left Side - Risk & Health Group */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {/* --- ① Inventory Risk --- */}
         <motion.div
           variants={{ hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0 } }}
@@ -408,10 +459,29 @@ export default function DashboardPage() {
             :                       'text-red-600'
             }
             onDetails={() => setRiskOpen(true)}
+            titleStyle="text-sm font-bold text-slate-900 dark:text-white"
           />
         </motion.div>
 
-        {/* --- ② Urgent Top‑3 --- */}
+            {/* --- ② Warehouse Healthy --- */}
+            <motion.div
+              variants={{ hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0 } }}
+              transition={{ duration: 0.4 }}
+            >
+              <KPI
+                title="Warehouse Healthy"
+                value={`${healthyPct} %`}
+                icon={<TrendingUp className="h-5 w-5" />}
+                colour="text-green-600"
+                onDetails={() => setHealthOpen(true)}
+                titleStyle="text-sm font-bold text-slate-900 dark:text-white"
+              />
+            </motion.div>
+          </div>
+
+          {/* Right Side - Urgent Parts & Shortages Group */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* --- ③ Top Urgent Parts --- */}
         <motion.div
           variants={{ hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0 } }}
           transition={{ duration: 0.4 }}
@@ -425,6 +495,7 @@ export default function DashboardPage() {
             }))}
             emptyText="No urgent parts 🎉"
             link={{ href: '/procurement', label: 'View all →' }}
+            titleStyle="text-sm font-bold text-slate-900 dark:text-white"
           />
         </motion.div>
 
@@ -439,24 +510,12 @@ export default function DashboardPage() {
             icon={<Package className="h-5 w-5" />}
             colour="text-orange-600"
             link={{ href: '/forecast', label: 'Report →' }}
-            titleStyle="text-sm font-bold text-black dark:text-white"
+            titleStyle="text-sm font-bold text-slate-900 dark:text-white"
           />
         </motion.div>
 
-        {/* --- ④ Warehouse Healthy --- */}
-        <motion.div
-          variants={{ hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0 } }}
-          transition={{ duration: 0.4 }}
-        >
-          <KPI
-            title="Warehouse Healthy"
-            value={`${healthyPct} %`}
-            icon={<TrendingUp className="h-5 w-5" />}
-            colour="text-green-600"
-            onDetails={() => setHealthOpen(true)}
-          />
-        </motion.div>
-      </motion.section>
+          </div>
+        </motion.section>
 
       {/* ---------- SMART INVENTORY ASSISTANT MODALS ---------- */}
       <TotalSKUsModal
@@ -539,54 +598,75 @@ export default function DashboardPage() {
                   Total needed: <strong className="text-slate-900 dark:text-white">{totalForecast}</strong>
                 </p>
                 <ResponsiveContainer width="100%" height="90%">
-                  <BarChart data={forecast} layout="vertical" margin={{ left: 90 }}>
+                  <BarChart
+                    data={[...forecast].sort((a, b) => b.qty - a.qty).slice(0, 10)}
+                    layout="vertical"
+                    margin={{ left: 90 }}
+                  >
+                    {/* Background Grid */}
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke="hsl(var(--muted-foreground))"
+                      opacity={0.4}
+                      horizontal={true}
+                      vertical={false}
+                    />
+
+                    {/* X-Axis (Numbers) */}
                     <XAxis
                       type="number"
                       tick={{
-                        fill: 'var(--foreground)',
-                        fontSize: 14,
-                        fontWeight: 700,
+                        fill: 'hsl(var(--foreground))',
+                        fontSize: 15,
+                        fontWeight: 500,
                         fontFamily: 'Inter, system-ui, sans-serif'
                       }}
-                      axisLine={{ stroke: 'var(--border)' }}
-                      tickLine={{ stroke: 'var(--border)' }}
+                      axisLine={{ stroke: 'hsl(var(--muted-foreground))' }}
+                      tickLine={{ stroke: 'hsl(var(--muted-foreground))' }}
                     />
+
+                    {/* Y-Axis (Labels) */}
                     <YAxis
                       dataKey="model"
                       type="category"
-                      width={200}
-                      tickFormatter={v => v.length > 22 ? v.slice(0, 20) + '…' : v}
+                      width={250}
+                      tickFormatter={v => {
+                        // Ensure v is a string
+                        const str = String(v || '');
+                        // Show full names for specific products
+                        if (str.includes('Enphase IQ7+')) return 'Enphase IQ7+ / IQ7A Microinverters';
+                        if (str.includes('Tesla Powerwal')) return 'Tesla Powerwall 3';
+                        if (str.includes('LG RESU 10H Pr')) return 'LG RESU 10H Prime';
+                        // For other products, use smart truncation
+                        return str.length > 28 ? str.slice(0, 25) + '…' : str;
+                      }}
                       tick={{
-                        fill: 'var(--foreground)',
-                        fontSize: 13,
-                        fontWeight: 700,
+                        fill: 'hsl(var(--foreground))',
+                        fontSize: 15,
+                        fontWeight: 500,
                         fontFamily: 'Inter, system-ui, sans-serif'
                       }}
-                      axisLine={{ stroke: 'var(--border)' }}
-                      tickLine={{ stroke: 'var(--border)' }}
+                      axisLine={{ stroke: 'hsl(var(--muted-foreground))' }}
+                      tickLine={{ stroke: 'hsl(var(--muted-foreground))' }}
+                      interval={0}
                     />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: 'var(--background)',
-                        border: '1px solid var(--border)',
-                        borderRadius: '8px',
-                        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
-                        color: 'var(--foreground)',
-                        fontSize: '14px',
-                        fontWeight: 700,
-                        fontFamily: 'Inter, system-ui, sans-serif'
-                      }}
-                    />
+
+
+
+                    {/* Enhanced Bar */}
                     <Bar
                       dataKey="qty"
-                      animationDuration={600}
-                      fill="url(#barGradient)"
-                      radius={[0, 4, 4, 0]}
+                      animationDuration={800}
+                      fill="url(#enhancedBarGradient)"
+                      radius={6}
                     />
+
+                    {/* Enhanced Gradient Definitions */}
                     <defs>
-                      <linearGradient id="barGradient" x1="0" y1="0" x2="1" y2="0">
-                        <stop offset="0%" stopColor="#3B82F6" />
-                        <stop offset="100%" stopColor="#6366F1" />
+                      <linearGradient id="enhancedBarGradient" x1="0" y1="0" x2="1" y2="0">
+                        <stop offset="0%" stopColor="#2563EB" stopOpacity={1} />
+                        <stop offset="50%" stopColor="#4F46E5" stopOpacity={1} />
+                        <stop offset="100%" stopColor="#7C3AED" stopOpacity={1} />
                       </linearGradient>
                     </defs>
                   </BarChart>
@@ -795,7 +875,7 @@ function KPI({
 }) {
   return (
     <Card>
-      <CardContent className="p-5 flex flex-col gap-3">
+      <CardContent className="p-3 flex flex-col gap-3">
         <div className="flex items-center gap-4">
           <div className="rounded-full p-2 bg-slate-100 dark:bg-slate-700">{icon}</div>
           <div>
@@ -831,42 +911,43 @@ function KPIList({
   items,
   emptyText,
   link,
+  titleStyle,
 }: {
   title    : string
   icon     : React.ReactNode
   items    : { label: string; value: string | number }[]
   emptyText: string
   link?    : { href: string; label: string }
+  titleStyle?: string
 }) {
   return (
     <Card>
-      <CardContent className="p-5">
-        <div className="flex items-center gap-4 mb-3">
+      <CardContent className="p-3 flex flex-col gap-3">
+        <div className="flex items-center gap-4">
           <div className="rounded-full p-2 bg-slate-100 dark:bg-slate-700">{icon}</div>
-          <p className="text-sm text-slate-600 dark:text-slate-300">{title}</p>
+          <div>
+            <p className={titleStyle || "text-sm text-slate-600 dark:text-slate-300"}>{title}</p>
+            {items.length === 0 ? (
+              <p className="text-xs text-slate-600 dark:text-slate-300">{emptyText}</p>
+            ) : (
+              <div className="text-sm">
+                {items.slice(0, 2).map((it, i) => (
+                  <div key={i} className="flex justify-between">
+                    <span className="truncate">{it.label}</span>
+                    <span className="font-medium">{it.value}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
-
-        {items.length === 0 ? (
-          <p className="text-xs text-slate-600 dark:text-slate-300 ml-[48px]">{emptyText}</p>
-        ) : (
-          <ul className="space-y-1 text-sm ml-[48px]">
-            {items.map((it, i) => (
-              <li key={i} className="flex justify-between">
-                <span className="truncate">{it.label}</span>
-                <span className="font-medium">{it.value}</span>
-              </li>
-            ))}
-          </ul>
-        )}
 
         {link && (
           <Link
             href={link.href}
-            className="ml-[48px] mt-3 inline-block"
+            className="ml-[48px] text-base font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:underline transition-colors"
           >
-            <span className="text-sm font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:underline">
-              {link.label}
-            </span>
+            {link.label}
           </Link>
         )}
       </CardContent>

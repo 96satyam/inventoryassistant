@@ -59,19 +59,25 @@ export function suppressNetworkErrors(): void {
 }
 
 /**
- * Initialize error suppression for network environments
+ * Initialize error suppression for all environments
  */
 export function initializeErrorSuppression(): void {
-  // Check if we're in a network environment (not localhost)
-  const isNetworkEnvironment = 
-    typeof window !== 'undefined' && 
-    !window.location.hostname.includes('localhost') &&
-    !window.location.hostname.includes('127.0.0.1');
-  
-  if (isNetworkEnvironment) {
-    console.log('🌐 Network environment detected - initializing error suppression');
-    suppressClipboardErrors();
-    suppressNetworkErrors();
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    const isLocalhost = hostname.includes('localhost') || hostname.includes('127.0.0.1');
+
+    if (isLocalhost) {
+      console.log('🏠 Local environment detected - minimal error suppression');
+      // Only suppress clipboard errors on localhost
+      suppressClipboardErrors();
+    } else {
+      console.log('🌐 Network environment detected - full error suppression');
+      suppressClipboardErrors();
+      suppressNetworkErrors();
+    }
+
+    // Always setup global error handlers for clipboard issues
+    setupGlobalErrorHandler();
   }
 }
 

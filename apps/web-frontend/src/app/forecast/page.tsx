@@ -1,10 +1,23 @@
 "use client"
 
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import { TrendingUp, Brain, Target, Zap, BarChart3, Clock, AlertTriangle, CheckCircle } from "lucide-react"
 import ForecastTable from "@/components/forecast/forecast-table"
+import { getAuthState } from "@/utils/authMiddleware"
 
 export default function ForecastPage() {
+  const router = useRouter()
+
+  // Authentication check
+  useEffect(() => {
+    const authState = getAuthState()
+    if (!authState.isAuthenticated) {
+      router.push('/login')
+      return
+    }
+  }, [router])
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-orange-50 to-amber-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-700">
       {/* Enhanced Header Section */}

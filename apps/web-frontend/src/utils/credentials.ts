@@ -26,7 +26,7 @@ export const AUTHORIZED_USERS: Record<string, UserCredentials> = {
     password: 'Satyam@123',
     role: 'admin',
     name: 'Satyam',
-    email: 'satyam@solarinstaller.com',
+    email: 'satyam1@wattmonk.com',
     permissions: ['dashboard', 'inventory', 'procurement', 'forecast', 'activity', 'system-settings', 'profile']
   }
 }

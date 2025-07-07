@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/table"
 import { RefreshCw, AlertTriangle, CheckCircle, Package, TrendingDown, TrendingUp } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { apiFetch, API_ENDPOINTS } from "@/lib/api-config"
 
 type ComponentItem = {
   name: string
@@ -25,7 +26,6 @@ export default function InventoryTable() {
   const fetchData = async () => {
     setLoading(true)
     try {
-      const { apiFetch, API_ENDPOINTS } = await import("@/lib/api-config")
       const res = await apiFetch(API_ENDPOINTS.INVENTORY)
 
       if (!res.ok) {

@@ -1,11 +1,21 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Allow cross-origin requests from public network IPs
+  allowedDevOrigins: [
+    '192.168.0.58',
+    '192.168.0.80',
+    '172.20.10.3',
+    '192.168.1.0/24',  // Allow entire subnet
+    '192.168.0.0/24',  // Allow entire subnet
+    '172.20.10.0/24',  // Allow entire subnet
+  ],
+
   // API configuration for production
   async rewrites() {
     return [
       {
         source: '/api/backend/:path*',
-        destination: process.env.NODE_ENV === 'production' 
+        destination: process.env.NODE_ENV === 'production'
           ? `${process.env.BACKEND_URL || 'http://localhost:8000'}/:path*`
           : 'http://localhost:8000/:path*',
       },
@@ -49,7 +59,7 @@ const nextConfig = {
 
   // Image optimization
   images: {
-    domains: ['localhost', '192.168.0.80', '172.20.10.3'],
+    domains: ['localhost', '192.168.0.58', '192.168.0.80', '172.20.10.3'],
     formats: ['image/webp', 'image/avif'],
   },
 

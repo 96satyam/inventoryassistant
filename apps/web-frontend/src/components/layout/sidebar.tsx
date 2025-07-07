@@ -13,7 +13,9 @@ import {
   Sun,
   ChevronRight,
   Sparkles,
-  Activity
+  Activity,
+  ChevronLeft,
+  Menu
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -22,19 +24,38 @@ import { cn } from "@/lib/utils"
 interface SidebarProps {
   isOpen: boolean
   onToggle: (open: boolean) => void
+  isCollapsed?: boolean
+  onCollapse?: (collapsed: boolean) => void
 }
 
-export function Sidebar({ isOpen, onToggle }: SidebarProps) {
+export function Sidebar({ isOpen, onToggle, isCollapsed = false, onCollapse }: SidebarProps) {
   return (
     <>
       {/* Desktop Sidebar */}
       <motion.aside
-        initial={{ x: -280 }}
-        animate={{ x: 0 }}
+        initial={{ width: isCollapsed ? 80 : 288 }}
+        animate={{ width: isCollapsed ? 80 : 288 }}
         transition={{ duration: 0.3, ease: "easeOut" }}
-        className="hidden lg:flex lg:flex-col w-72 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-r border-slate-200/50 dark:border-slate-700/50 shadow-xl"
+        className="hidden lg:flex lg:flex-col bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-r border-slate-200/50 dark:border-slate-700/50 shadow-xl relative"
       >
-        <SidebarContent />
+        <SidebarContent isCollapsed={isCollapsed} />
+
+        {/* Collapse Toggle Button - Enhanced Visibility */}
+        {onCollapse && (
+          <motion.button
+            onClick={() => onCollapse(!isCollapsed)}
+            className="absolute right-2 top-6 w-8 h-8 bg-gradient-to-r from-orange-500 to-orange-600 dark:from-orange-600 dark:to-orange-700 border-2 border-white dark:border-slate-900 rounded-full flex items-center justify-center shadow-xl hover:shadow-orange-500/25 transition-all duration-300 z-20 hover:from-orange-600 hover:to-orange-700 dark:hover:from-orange-700 dark:hover:to-orange-800 ring-1 ring-orange-200 dark:ring-orange-800"
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+          >
+            {isCollapsed ? (
+              <ChevronRight className="h-4 w-4 text-white font-extrabold drop-shadow-sm" />
+            ) : (
+              <ChevronLeft className="h-4 w-4 text-white font-extrabold drop-shadow-sm" />
+            )}
+          </motion.button>
+        )}
       </motion.aside>
 
       {/* Mobile Sidebar */}
@@ -47,7 +68,7 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
             transition={{ duration: 0.3, ease: "easeOut" }}
             className="fixed left-0 top-0 bottom-0 w-72 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-r border-slate-200/50 dark:border-slate-700/50 shadow-2xl z-50 lg:hidden"
           >
-            <SidebarContent />
+            <SidebarContent isCollapsed={false} />
           </motion.aside>
         )}
       </AnimatePresence>
@@ -55,7 +76,7 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
   )
 }
 
-function SidebarContent() {
+function SidebarContent({ isCollapsed = false }: { isCollapsed?: boolean }) {
   return (
     <div className="flex flex-col h-full">
       {/* Logo Section */}
@@ -63,9 +84,15 @@ function SidebarContent() {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.1 }}
-        className="p-6 border-b border-slate-200/50 dark:border-slate-700/50"
+        className={cn(
+          "border-b border-slate-200/50 dark:border-slate-700/50 transition-all duration-300",
+          isCollapsed ? "p-3" : "p-6"
+        )}
       >
-        <div className="flex items-center gap-3">
+        <div className={cn(
+          "flex items-center transition-all duration-300",
+          isCollapsed ? "justify-center" : "gap-3"
+        )}>
           <div className="relative">
             <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 rounded-xl shadow-lg flex items-center justify-center">
               <Sun className="h-6 w-6 text-white" />
@@ -78,20 +105,30 @@ function SidebarContent() {
               <Sparkles className="h-2 w-2 text-white" />
             </motion.div>
           </div>
-          <div>
-            <h1 className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">
-              Solar Intelligence
-            </h1>
-            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-              AI-Powered Platform
-            </p>
-          </div>
+          {!isCollapsed && (
+            <motion.div
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -10 }}
+              transition={{ duration: 0.2 }}
+            >
+              <h1 className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">
+                Solar Intelligence
+              </h1>
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                AI-Powered Platform
+              </p>
+            </motion.div>
+          )}
         </div>
       </motion.div>
 
       {/* Navigation */}
-      <div className="flex-1 p-4">
-        <NavLinks />
+      <div className={cn(
+        "flex-1 transition-all duration-300",
+        isCollapsed ? "p-2" : "p-4"
+      )}>
+        <NavLinks isCollapsed={isCollapsed} />
       </div>
 
       {/* Status Footer */}
@@ -124,7 +161,7 @@ function SidebarContent() {
   )
 }
 
-function NavLinks() {
+function NavLinks({ isCollapsed = false }: { isCollapsed?: boolean }) {
   const pathname = usePathname()
 
   const links = [
@@ -167,13 +204,18 @@ function NavLinks() {
 
   return (
     <nav className="space-y-2">
-      <div className="mb-4">
-        <h2 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider px-3 mb-3">
-          Navigation
-        </h2>
-      </div>
+      {!isCollapsed && (
+        <div className="mb-4">
+          <h2 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider px-3 mb-3">
+            Navigation
+          </h2>
+        </div>
+      )}
       {links.map(({ label, href, icon: Icon, color, description }, index) => {
-        const isActive = pathname === href
+        // Enhanced active state detection
+        const isActive = href === "/"
+          ? pathname === "/" || pathname === "/dashboard"
+          : pathname === href || pathname.startsWith(href + "/")
         return (
           <motion.div
             key={href}
@@ -183,15 +225,17 @@ function NavLinks() {
           >
             <Link
               href={href}
+              title={isCollapsed ? label : undefined}
               className={cn(
-                "group flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 relative overflow-hidden",
+                "group flex items-center rounded-xl transition-all duration-200 relative overflow-hidden",
+                isCollapsed ? "justify-center p-3 mx-1" : "gap-3 px-3 py-3",
                 isActive
                   ? "bg-gradient-to-r from-slate-100 to-slate-50 dark:from-slate-800 dark:to-slate-700 shadow-lg border border-slate-200 dark:border-slate-600"
                   : "hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:shadow-md"
               )}
             >
               {/* Active indicator */}
-              {isActive && (
+              {isActive && !isCollapsed && (
                 <motion.div
                   layoutId="activeTab"
                   className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-blue-500 to-purple-600 rounded-r-full"
@@ -204,7 +248,8 @@ function NavLinks() {
                 "p-2 rounded-lg transition-all duration-200",
                 isActive
                   ? `bg-gradient-to-r ${color} shadow-lg`
-                  : "bg-slate-100 dark:bg-slate-800 group-hover:bg-slate-200 dark:group-hover:bg-slate-700"
+                  : "bg-slate-100 dark:bg-slate-800 group-hover:bg-slate-200 dark:group-hover:bg-slate-700",
+                isCollapsed && isActive && "ring-2 ring-blue-500 ring-opacity-50"
               )}>
                 <Icon className={cn(
                   "h-4 w-4 transition-colors duration-200",
@@ -212,34 +257,44 @@ function NavLinks() {
                 )} />
               </div>
 
-              {/* Content */}
-              <div className="flex-1 min-w-0">
-                <p className={cn(
-                  "font-medium transition-colors duration-200 truncate",
-                  isActive
-                    ? "text-slate-900 dark:text-white"
-                    : "text-slate-700 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-white"
-                )}>
-                  {label}
-                </p>
-                <p className={cn(
-                  "text-xs transition-colors duration-200 truncate",
-                  isActive
-                    ? "text-slate-600 dark:text-slate-400"
-                    : "text-slate-500 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-400"
-                )}>
-                  {description}
-                </p>
-              </div>
+              {/* Content - Hidden when collapsed */}
+              {!isCollapsed && (
+                <motion.div
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -10 }}
+                  transition={{ duration: 0.2 }}
+                  className="flex-1 min-w-0"
+                >
+                  <p className={cn(
+                    "font-medium transition-colors duration-200 truncate",
+                    isActive
+                      ? "text-slate-900 dark:text-white"
+                      : "text-slate-700 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-white"
+                  )}>
+                    {label}
+                  </p>
+                    <p className={cn(
+                      "text-xs transition-colors duration-200 truncate",
+                      isActive
+                        ? "text-slate-600 dark:text-slate-400"
+                        : "text-slate-500 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-400"
+                    )}>
+                      {description}
+                    </p>
+                  </motion.div>
+                )}
 
-              {/* Arrow indicator */}
-              <ChevronRight className={cn(
-                "h-4 w-4 transition-all duration-200",
-                isActive
-                  ? "text-slate-600 dark:text-slate-400 transform translate-x-1"
-                  : "text-slate-400 dark:text-slate-600 group-hover:text-slate-600 dark:group-hover:text-slate-400 group-hover:translate-x-1"
-              )} />
-            </Link>
+                {/* Arrow indicator - Only show when not collapsed */}
+                {!isCollapsed && (
+                  <ChevronRight className={cn(
+                    "h-4 w-4 transition-all duration-200",
+                    isActive
+                      ? "text-slate-600 dark:text-slate-400 transform translate-x-1"
+                      : "text-slate-400 dark:text-slate-600 group-hover:text-slate-600 dark:group-hover:text-slate-400 group-hover:translate-x-1"
+                  )} />
+                )}
+              </Link>
           </motion.div>
         )
       })}
