@@ -1,0 +1,104 @@
+[
+  {
+    "model": "Q.TRON BLK M-G2",
+    "qty": 45,
+    "urgency": 360,
+    "is_urgent": true
+  },
+  {
+    "model": "Hanwa Qcell",
+    "qty": 35,
+    "urgency": 280,
+    "is_urgent": true
+  },
+  {
+    "model": "SolarEdge S-Series",
+    "qty": 45,
+    "urgency": 270,
+    "is_urgent": true
+  },
+  {
+    "model": "TOPHiKu6 Series",
+    "qty": 38,
+    "urgency": 266,
+    "is_urgent": true
+  },
+  {
+    "model": "Q.PEAK DUO XL-G9.2 Series",
+    "qty": 30,
+    "urgency": 240,
+    "is_urgent": true
+  },
+  {
+    "model": "SOLAREDGE U650 POWER OPTIMIZER",
+    "qty": 34,
+    "urgency": 204,
+    "is_urgent": false
+  },
+  {
+    "model": "Maxeon 7 Series",
+    "qty": 21,
+    "urgency": 189,
+    "is_urgent": false
+  },
+  {
+    "model": "Tigo TS4-A-O",
+    "qty": 31,
+    "urgency": 155,
+    "is_urgent": false
+  },
+  {
+    "model": "Tigo TS4-A-S",
+    "qty": 27,
+    "urgency": 135,
+    "is_urgent": false
+  },
+  {
+    "model": "SolarEdge P-Series",
+    "qty": 13,
+    "urgency": 78,
+    "is_urgent": false
+  },
+  {
+    "model": "LG RESU 10H Prime",
+    "qty": 3,
+    "urgency": 24,
+    "is_urgent": false
+  },
+  {
+    "model": "SOLAREDGE USE3800H-USMNBL75",
+    "qty": 2,
+    "urgency": 12,
+    "is_urgent": false
+  },
+  {
+    "model": "SolarEdge Home Hub Inverter",
+    "qty": 2,
+    "urgency": 12,
+    "is_urgent": false
+  },
+  {
+    "model": "SolarEdge HD-Wave Inverter",
+    "qty": 2,
+    "urgency": 12,
+    "is_urgent": false
+  },
+  {
+    "model": "SOLAREDGE ENERGY BANK BAT-10K1P",
+    "qty": 2,
+    "urgency": 12,
+    "is_urgent": false
+  },
+  {
+    "model": "Tesla Powerwall 3",
+    "qty": 1,
+    "urgency": 9,
+    "is_urgent": false
+  },
+  {
+    "model": "Enphase IQ7+ / IQ7A Microinverters",
+    "qty": 1,
+    "urgency": 5,
+    "is_urgent": false
+  }
+]

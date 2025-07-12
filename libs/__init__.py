@@ -1,1 +1,2 @@
-from libs.core.forecast import forecast_shortages
+# Empty init file to make libs a package
+# Individual modules should be imported directly

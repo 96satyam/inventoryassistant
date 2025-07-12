@@ -1,0 +1,110 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Project Schema",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier for the project"
+    },
+    "name": {
+      "type": "string",
+      "description": "Project name",
+      "minLength": 1,
+      "maxLength": 255
+    },
+    "description": {
+      "type": "string",
+      "description": "Project description",
+      "maxLength": 1000
+    },
+    "status": {
+      "type": "string",
+      "enum": ["planning", "in-progress", "completed", "cancelled"],
+      "description": "Current project status"
+    },
+    "startDate": {
+      "type": "string",
+      "format": "date",
+      "description": "Project start date"
+    },
+    "endDate": {
+      "type": "string",
+      "format": "date",
+      "description": "Project end date"
+    },
+    "estimatedDuration": {
+      "type": "number",
+      "minimum": 1,
+      "description": "Estimated duration in days"
+    },
+    "client": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "email": {
+          "type": "string",
+          "format": "email"
+        },
+        "phone": {
+          "type": "string"
+        },
+        "address": {
+          "type": "string"
+        }
+      },
+      "required": ["name"],
+      "additionalProperties": false
+    },
+    "components": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "itemId": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "number",
+            "minimum": 1
+          },
+          "allocated": {
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "required": ["itemId", "quantity"],
+        "additionalProperties": false
+      }
+    },
+    "budget": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Project budget"
+    },
+    "actualCost": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Actual project cost"
+    },
+    "progress": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Project completion percentage"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": ["id", "name", "status", "startDate", "createdAt"],
+  "additionalProperties": false
+}

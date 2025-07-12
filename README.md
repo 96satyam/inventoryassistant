@@ -1,478 +1,434 @@
-# 🌞 Solar Installer AI - Smart Inventory Management System
+# 🌞 Solar Installer AI - Intelligent Inventory Management System
 
-[![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://python.org)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-green.svg)](https://fastapi.tiangolo.com)
+[![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://python.org)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-green.svg)](https://fastapi.tiangolo.com)
 [![Next.js](https://img.shields.io/badge/Next.js-15.3.4-black.svg)](https://nextjs.org)
 [![React](https://img.shields.io/badge/React-19.0+-blue.svg)](https://reactjs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)](https://typescriptlang.org)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-An intelligent inventory management and procurement automation system specifically designed for solar installation companies. This AI-powered platform streamlines equipment tracking, demand forecasting, and automated purchase order generation.
+**A professional-grade, AI-powered inventory management and procurement automation system specifically designed for solar installation companies.** This enterprise-ready platform combines real-time inventory tracking, intelligent demand forecasting, automated document processing, and seamless procurement workflows to streamline solar installation operations.
 
-## 🚀 Features
+## ✨ Key Features
 
-### 📊 **Smart Dashboard**
-- Real-time inventory monitoring with interactive charts
-- KPI tracking (efficiency metrics, stock levels, procurement status)
-- Automated shortage notifications with hourly scheduling
-- Dark/light mode support with automatic color adaptation
+### 🎯 **Intelligent Document Processing**
+- **AI-Powered PDF Analysis**: Automatically extract equipment specifications from solar plansets
+- **Smart Equipment Recognition**: Identify modules, inverters, optimizers, and components using OpenAI GPT
+- **LangGraph Pipeline**: Advanced workflow orchestration for complex document processing
+- **Real-time Processing**: Instant analysis with progress tracking and error handling
 
-### 🤖 **AI-Powered Document Processing**
-- PDF planset analysis and equipment extraction
-- Automated solar module, inverter, and component identification
-- LangGraph-based processing pipeline with OpenAI integration
-- Support for multiple document formats
+### 📊 **Real-Time Inventory Management**
+- **Live Dashboard**: Interactive KPIs with real-time stock levels and procurement status
+- **Google Sheets Integration**: Seamless sync with existing spreadsheets for live data updates
+- **Smart Alerts**: Automated shortage notifications with customizable timing
+- **Multi-View Support**: Toggle between row/column layouts with expandable item lists
 
-### 📈 **Demand Forecasting**
-- Machine learning-based shortage prediction
-- Historical data analysis for trend identification
-- Top 5 critical items highlighting with visual indicators
-- Seasonal demand pattern recognition
+### 🤖 **AI-Driven Forecasting**
+- **Demand Prediction**: Machine learning algorithms analyze historical patterns
+- **Shortage Prevention**: Proactive identification of potential stock shortfalls
+- **Seasonal Analysis**: Recognize trends and seasonal demand variations
+- **Top Priority Items**: Highlight critical components requiring immediate attention
 
-### 🛒 **Automated Procurement**
-- Smart vendor suggestion system with PO generation
-- Email integration for automated purchase order sending
-- Vendor-specific branding and contact management
-- Purchase history tracking and analytics
+### 🛒 **Automated Procurement Workflows**
+- **Smart Vendor Matching**: AI-powered vendor recommendations based on equipment type
+- **Professional Email Templates**: WattMonk-branded purchase orders with company details
+- **Multi-Recipient Support**: Send orders to multiple vendors simultaneously
+- **Order Tracking**: Complete procurement history with delivery status monitoring
 
-### 📱 **Modern Web Interface**
-- Responsive design with Tailwind CSS
-- Interactive data visualization with Recharts
-- Real-time updates using SWR data fetching
-- Professional UI with Framer Motion animations
+### 🌐 **Modern Web Interface**
+- **Responsive Design**: Professional UI optimized for desktop and mobile devices
+- **Dark/Light Themes**: Automatic color adaptation with user preference persistence
+- **Interactive Charts**: Real-time data visualization with hover details and export options
+- **Professional Branding**: Clean, engaging interface designed for solar industry professionals
 
-### 🔔 **Notification System**
-- Toast notifications for user actions
-- Email delivery status confirmations
-- Shortage alerts with customizable timing
-- WhatsApp integration for critical alerts
+### 🔗 **Enterprise Integration**
+- **Google Sheets API**: Real-time bidirectional sync with existing workflows
+- **Email Automation**: SMTP integration for automated communications
+- **Export Capabilities**: CSV export functionality across all data modules
+- **Session Management**: Secure authentication with per-session login requirements
 
-## 🏗️ Architecture
+## 🏗️ System Architecture
+
+> **📖 For complete architectural details, see [ARCHITECTURE.md](./ARCHITECTURE.md)**
+
+**Enterprise-grade, microservices-inspired architecture** with clean separation of concerns and scalable design:
 
 ```
-solar_installer_ai/
-├── apps/
-│   ├── api_core/           # FastAPI backend application
-│   ├── web-frontend/       # Next.js React frontend
-│   └── worker-langgraph/   # Background processing workers
-├── libs/
-│   └── core/              # Shared business logic and utilities
-├── agents/                # AI agents for specific tasks
-├── data/                  # Sample data and configurations
-├── tests/                 # Test suites
-└── infra/                 # Infrastructure and deployment configs
+solar_installer_ai/                    # 🎯 PROJECT ROOT
+├── 🌐 frontend/                       # Next.js Frontend Application
+│   ├── src/app/                       # App Router Pages (Dashboard, Inventory, etc.)
+│   ├── src/components/                # Reusable React Components
+│   ├── src/lib/                       # API Client & Utilities
+│   ├── Dockerfile                     # Production Container
+│   └── package.json                   # Dependencies & Scripts
+│
+├── 🔧 backend/                        # FastAPI Backend Server
+│   ├── main.py                        # Application Entry Point
+│   ├── app/                           # Application Source Code
+│   │   ├── api/v1/endpoints/          # REST API Routes
+│   │   ├── agents/                    # AI Processing Agents
+│   │   ├── services/                  # Business Logic Layer
+│   │   ├── core/                      # Configuration & Settings
+│   │   └── utils/                     # Helper Functions
+│   ├── Dockerfile                     # Production Container
+│   └── requirements.txt               # Python Dependencies
+│
+├── 🧠 libs/core/                      # Shared Business Logic
+│   ├── inventory.py                   # Inventory Management
+│   ├── forecast.py                    # Demand Forecasting
+│   ├── sheets_connector.py            # Google Sheets Integration
+│   └── graph.py                       # AI Pipeline Orchestration
+│
+├── 📊 data/                           # Application Data
+│   ├── Inventry.xlsx                  # Inventory Database
+│   ├── install_history.xlsx           # Historical Installation Data
+│   └── uploads/                       # PDF Document Storage
+│
+├── 📚 shared/                         # Cross-Platform Resources
+│   ├── types/                         # TypeScript Type Definitions
+│   ├── constants/                     # Shared Configuration
+│   └── schemas/                       # Data Validation Schemas
+│
+├── 🐳 docker-compose.yml              # Container Orchestration
+├── 📖 ARCHITECTURE.md                 # Complete System Documentation
+├── 🚀 DEPLOYMENT.md                   # Production Deployment Guide
+└── ⚡ QUICK_START.md                  # Developer Quick Reference
 ```
+
+### 🔄 **Data Flow Architecture**
+```
+📱 Frontend (Next.js) ↔ 🔧 Backend (FastAPI) ↔ 📊 Google Sheets (Live Data)
+                              ↕
+                         🤖 AI Agents ↔ 📄 Document Processing
+                              ↕
+                         📧 Email Service ↔ 🛒 Procurement Automation
+```
+
+### 🎯 **Core Components**
+- **Frontend**: Professional React dashboard with real-time updates
+- **Backend**: High-performance FastAPI server with async operations
+- **AI Pipeline**: LangGraph-orchestrated document processing workflow
+- **Data Layer**: Hybrid Excel/Google Sheets with real-time synchronization
+- **Integration**: Email automation, vendor management, and export capabilities
 
 ## 🛠️ Technology Stack
 
-### **Backend**
-- **FastAPI** - High-performance Python web framework
-- **LangChain & LangGraph** - AI workflow orchestration
-- **OpenAI GPT** - Document processing and analysis
-- **SQLAlchemy** - Database ORM
-- **Pandas** - Data manipulation and analysis
-- **APScheduler** - Background task scheduling
+### **🔧 Backend Technologies**
+- **FastAPI 0.104+** - High-performance async Python web framework
+- **LangChain & LangGraph** - Advanced AI workflow orchestration and pipeline management
+- **OpenAI GPT-4** - Intelligent document processing and equipment extraction
+- **Pandas 2.1+** - Professional data manipulation and analysis
+- **Google Sheets API** - Real-time spreadsheet integration and synchronization
+- **Uvicorn** - Lightning-fast ASGI server with auto-reload capabilities
 
-### **Frontend**
-- **Next.js 15.3.4** - React framework with Turbopack
-- **React 19** - UI library with latest features
-- **TypeScript** - Type-safe development
-- **Tailwind CSS 4.1** - Utility-first styling
-- **SWR** - Data fetching and caching
-- **Recharts** - Data visualization
-- **Framer Motion** - Smooth animations
+### **🌐 Frontend Technologies**
+- **Next.js 15.3.4** - Modern React framework with App Router and Turbopack
+- **React 19** - Latest UI library with concurrent features and server components
+- **TypeScript 5.0+** - Type-safe development with advanced type inference
+- **Tailwind CSS** - Utility-first styling with responsive design system
+- **SWR** - Smart data fetching with caching, revalidation, and error handling
+- **Recharts** - Professional data visualization with interactive charts
 
-### **AI & ML**
-- **OpenAI API** - GPT models for text processing
-- **LangChain** - AI application framework
-- **Transformers** - Hugging Face model integration
-- **Scikit-learn** - Machine learning algorithms
-- **FAISS** - Vector similarity search
+### **🤖 AI & Machine Learning**
+- **OpenAI API** - GPT-4 models for intelligent text processing and analysis
+- **LangChain** - Comprehensive AI application development framework
+- **LangGraph** - State-based workflow orchestration for complex AI pipelines
+- **PyMuPDF** - Advanced PDF text extraction with OCR fallback capabilities
+- **Pytesseract** - Optical character recognition for scanned documents
 
-### **Infrastructure**
-- **Docker** - Containerization
-- **CORS** - Cross-origin resource sharing
-- **Email Services** - SMTP integration
-- **File Processing** - PDF, Excel, and image handling
+### **🔗 Integration & Infrastructure**
+- **Google Cloud APIs** - Sheets API for real-time data synchronization
+- **SMTP Integration** - Professional email automation with Gmail support
+- **Docker & Docker Compose** - Containerized deployment with orchestration
+- **CORS Configuration** - Secure cross-origin resource sharing
+- **File Processing** - Multi-format document handling (PDF, Excel, images)
 
 ## 📋 Prerequisites
 
-- **Python 3.10+**
-- **Node.js 18+**
-- **npm or yarn**
-- **OpenAI API Key**
-- **Email SMTP Configuration** (optional)
+### **System Requirements**
+- **Python 3.11+** (recommended for optimal performance)
+- **Node.js 18+** with npm or yarn package manager
+- **Git** for version control and repository management
+- **4GB+ RAM** for smooth operation with AI processing
+- **10GB+ disk space** for dependencies and data storage
+
+### **Required API Keys & Credentials**
+- **OpenAI API Key** - For AI-powered document processing ([Get API Key](https://platform.openai.com/api-keys))
+- **Google Sheets API** - For real-time inventory synchronization ([Setup Guide](./docs/GOOGLE_SHEETS_INTEGRATION.md))
+- **Gmail SMTP** - For automated email functionality (App Password required)
 
 ## 🚀 Quick Start
 
-### 1. Clone the Repository
+> **📖 For detailed setup instructions, see [QUICK_START.md](./QUICK_START.md)**
+
+### **⚡ 1. Clone & Setup**
 ```bash
-git clone <repository-url>
+# Clone the repository
+git clone https://github.com/96satyam/inventoryassistant.git
 cd solar_installer_ai
+
+# Setup backend environment
+cd backend
+cp .env.example .env
+# Edit .env with your API keys and configuration
+
+# Setup frontend environment
+cd ../frontend
+cp .env.local.example .env.local
+# Edit .env.local with your configuration
 ```
 
-### 2. Environment Setup
+### **⚡ 2. Install Dependencies**
 ```bash
-# Create and activate virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install Python dependencies
+# Backend dependencies
+cd backend
 pip install -r requirements.txt
-```
 
-### 3. Environment Variables
-Create a `.env` file in the root directory:
-```env
-# OpenAI Configuration
-OPENAI_API_KEY=your_openai_api_key_here
-
-# Email Configuration (optional)
-MAIL_USER=your_email@example.com
-MAIL_PASSWORD=your_app_password
-MAIL_SERVER=smtp.gmail.com
-MAIL_PORT=587
-
-# Database Configuration (optional)
-DATABASE_URL=sqlite:///./solar_inventory.db
-```
-
-### 4. Start the Backend
-```bash
-cd apps/api_core
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-```
-
-### 5. Start the Frontend
-```bash
-cd apps/web-frontend
+# Frontend dependencies
+cd ../frontend
 npm install
+```
+
+### **⚡ 3. Start the Application**
+```bash
+# Terminal 1: Start Backend Server
+cd backend
+python main.py
+
+# Terminal 2: Start Frontend Server (new terminal)
+cd frontend
 npm run dev
 ```
 
-### 6. Access the Application
-- **Frontend**: http://localhost:3001
-- **Backend API**: http://localhost:8000
-- **API Documentation**: http://localhost:8000/docs
+### **⚡ 4. Access Your Application**
+- **🌐 Frontend Dashboard**: http://localhost:3000
+- **🔧 Backend API**: http://127.0.0.1:8003
+- **📚 API Documentation**: http://127.0.0.1:8003/docs
+- **🔍 Health Check**: http://127.0.0.1:8003/
 
-## 📖 Usage Guide
+## 📖 User Guide
 
-### **Dashboard Overview**
-1. Navigate to the dashboard to view real-time inventory metrics
-2. Monitor stock levels, efficiency ratings, and procurement status
-3. Click on metric cards for detailed views of specific categories
-4. Use the notification bell to view system alerts
+### **🏠 Dashboard Overview**
+**Professional KPI monitoring with real-time insights**
+- **Interactive Metrics**: Click Total SKUs, Healthy Stock, Low Stock cards for filtered views
+- **Live Data Indicators**: Auto-refresh timers with countdown displays
+- **Procurement Tracking**: Recent activity with "View All" and "Export CSV" functionality
+- **Smart Notifications**: Hourly shortage alerts with customizable timing
 
-### **Document Processing**
-1. Go to the Equipment Extractor page
-2. Upload a PDF planset or equipment specification document
-3. The AI will automatically extract equipment details
-4. Review and confirm the extracted information
+### **📄 AI Document Processing**
+**Transform PDF plansets into actionable inventory data**
+1. **Upload Documents**: Drag & drop PDF files (max 10MB) into the processing area
+2. **AI Analysis**: Advanced GPT-4 extraction identifies modules, inverters, optimizers, and components
+3. **Real-time Processing**: Watch progress with detailed status updates and error handling
+4. **Inventory Integration**: Automatically compare extracted equipment against current stock levels
 
-### **Inventory Management**
-1. Access the Inventory Checker to view current stock levels
-2. Monitor items marked as "Low Stock" or "Critical"
-3. Set up automated reorder points for key components
-4. Track historical usage patterns
+### **📦 Inventory Management**
+**Real-time stock monitoring with Google Sheets integration**
+- **Live Synchronization**: Real-time updates from Google Sheets with change detection
+- **Multi-View Options**: Toggle between row and column layouts for optimal viewing
+- **Smart Filtering**: Interactive cards show healthy stock, low stock, and forecasted items
+- **Export Capabilities**: CSV export functionality across all inventory modules
 
-### **Procurement Automation**
-1. Visit the Procurement page to view suggested purchase orders
-2. Review vendor recommendations and pricing
-3. Generate and send purchase orders via email
-4. Track order status and delivery confirmations
+### **🛒 Procurement Automation**
+**Professional purchase order generation and vendor management**
+1. **Smart Suggestions**: AI-powered vendor recommendations based on equipment type and availability
+2. **Professional Templates**: WattMonk-branded emails with complete company contact details
+3. **Multi-Recipient Support**: Send orders to multiple vendors (satyam1@wattmonk.com, shivt843@gmail.com, satyam.tiwari.9695@gmail.com)
+4. **Delivery Tracking**: Success/failure notifications with detailed status reporting
 
-### **Forecasting**
-1. Use the Forecast page to view demand predictions
-2. Analyze seasonal trends and usage patterns
-3. Plan inventory purchases based on AI recommendations
-4. Monitor forecast accuracy over time
+### **📈 Demand Forecasting**
+**AI-driven predictions for next 10 installations**
+- **Historical Analysis**: Machine learning algorithms analyze past installation patterns
+- **Priority Ranking**: Top 10 high-urgency brands with organized formatting
+- **Trend Visualization**: Charts with real day-by-day data and hover details
+- **Procurement Planning**: Automated suggestions based on predicted shortfalls
 
-## 🔧 Configuration
+## ⚙️ Configuration
 
-### **API Endpoints**
-The system provides the following main endpoints:
-- `GET /stats/` - Dashboard KPI metrics
-- `GET /inventory/` - Current inventory levels
-- `GET /forecast/` - Demand forecasting data
-- `GET /suggestions/` - Vendor and PO suggestions
-- `POST /run-pipeline` - Document processing
-- `POST /procurement/send-email` - Send purchase orders
+### **🔧 Environment Configuration**
 
-### **Cross-Origin Configuration**
-For network deployment, the system supports:
-```javascript
-allowedDevOrigins: [
-  'localhost:3001',
-  '192.168.0.80:3001',
-  '127.0.0.1:3001'
-]
+#### **Backend Configuration (`backend/.env`)**
+```env
+# Email Configuration
+MAIL_USER=your-email@gmail.com
+MAIL_PASS=your-gmail-app-password
+
+# Environment Settings
+ENVIRONMENT=development
+API_HOST=127.0.0.1
+API_PORT=8003
+ALLOW_ALL_ORIGINS=false
+
+# AI Configuration
+OPENAI_API_KEY=your-openai-api-key-here
+
+# Authentication
+AUTH_USERNAME=admin
+AUTH_PASSWORD=your-secure-password
 ```
 
-### **Email Templates**
-Customize purchase order emails in `email_templates/order_request.html`
+#### **Frontend Configuration (`frontend/.env.local`)**
+```env
+# API Configuration
+NEXT_PUBLIC_API_URL=http://localhost:8003
 
-## 🧪 Testing
+# Feature Flags
+NEXT_PUBLIC_ENABLE_ANALYTICS=true
+NEXT_PUBLIC_ENABLE_FORECASTING=true
+NEXT_PUBLIC_ENABLE_PROCUREMENT=true
 
-### Run Backend Tests
-```bash
-cd solar_installer_ai
-python -m pytest tests/ -v
+# UI Configuration
+NEXT_PUBLIC_DEFAULT_THEME=light
+NEXT_PUBLIC_COMPANY_NAME="WattMonk"
+NEXT_PUBLIC_APP_NAME="Solar Installer AI"
 ```
 
-### Run Frontend Tests
+### **📊 Google Sheets Integration**
+**Real-time inventory synchronization setup:**
+1. **Create Google Cloud Project** with Sheets API enabled
+2. **Generate Service Account** and download credentials JSON
+3. **Place credentials** at `backend/sheets_credentials.json`
+4. **Share spreadsheets** with service account email (editor access)
+5. **Configure sheet IDs** in `backend/app/core/sheets_config.py`
+
+### **📧 Professional Email Templates**
+**WattMonk-branded procurement communications:**
+- **Template Location**: `email_templates/order_request.html`
+- **Company Branding**: Automatic WattMonk contact details insertion
+- **Multi-Recipient**: Supports multiple vendor email addresses
+- **Status Tracking**: Success/failure notifications with detailed error reporting
+
+## 🧪 Testing & Quality Assurance
+
+### **🔧 Backend Testing**
 ```bash
-cd apps/web-frontend
+# Run all backend tests
+cd backend
+pytest tests/ -v
+
+# Run with coverage reporting
+pytest --cov=app --cov-report=html
+
+# Test specific AI agents
+pytest tests/test_doc_extractor.py -v
+pytest tests/test_inventory_checker.py -v
+pytest tests/test_forecaster.py -v
+pytest tests/test_procurement_bot.py -v
+```
+
+### **🌐 Frontend Testing**
+```bash
+# Run Jest unit tests
+cd frontend
 npm test
+
+# Run with coverage
+npm test -- --coverage
+
+# Run E2E tests (if configured)
+npm run test:e2e
 ```
 
-### Test Email Functionality
+### **📧 Integration Testing**
 ```bash
-python test_email.py
+# Test email functionality
+python -c "from app.services.email import send_email; print('Email test:', send_email('Test', 'Test message', 'test@example.com'))"
+
+# Test Google Sheets connection
+curl http://127.0.0.1:8003/sheets/test-connection
+
+# Test AI pipeline
+curl -X POST -F "file=@data/uploads/Planset-3.pdf" http://127.0.0.1:8003/run-pipeline
 ```
 
-## 📦 Deployment
+## 🚀 Deployment
 
-### **Docker Deployment**
+> **📖 For complete deployment guide, see [DEPLOYMENT.md](./DEPLOYMENT.md)**
+
+### **🐳 Docker Deployment (Recommended)**
 ```bash
-# Build the application
-docker build -t solar-installer-ai .
+# Quick start with Docker Compose
+docker-compose up --build
 
-# Run the container
-docker run -p 8000:8000 -p 3001:3001 solar-installer-ai
+# Production deployment
+docker-compose --profile production up -d --build
+
+# View logs
+docker-compose logs -f
 ```
 
-### **Production Environment**
-1. Set `NODE_ENV=production`
-2. Configure production database
-3. Set up SSL certificates
-4. Configure email service credentials
-5. Deploy to cloud platform (AWS, GCP, Azure)
+### **☁️ Production Deployment**
+**Enterprise-ready deployment with full scalability:**
+1. **Environment Setup**: Configure production `.env` files with secure credentials
+2. **SSL/HTTPS**: Set up Let's Encrypt certificates for secure connections
+3. **Database**: Configure PostgreSQL or MongoDB for production data storage
+4. **Monitoring**: Implement health checks, logging, and performance monitoring
+5. **Scaling**: Use Docker Swarm or Kubernetes for horizontal scaling
+
+## 📚 Documentation
+
+### **📖 Complete Documentation Suite**
+- **[ARCHITECTURE.md](./ARCHITECTURE.md)** - Complete system architecture and technical blueprint
+- **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Production deployment guide with Docker and cloud setup
+- **[QUICK_START.md](./QUICK_START.md)** - Developer quick reference for immediate productivity
+- **[DEVELOPER_GUIDE.md](./DEVELOPER_GUIDE.md)** - Comprehensive development guide and best practices
+
+### **🔗 API Documentation**
+- **Interactive API Docs**: http://127.0.0.1:8003/docs (when backend is running)
+- **OpenAPI Schema**: http://127.0.0.1:8003/openapi.json
+- **Health Monitoring**: http://127.0.0.1:8003/health
 
 ## 🤝 Contributing
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+We welcome contributions from the solar energy and software development communities!
+
+### **🔧 Development Setup**
+1. **Fork** the repository and clone your fork
+2. **Create** a feature branch: `git checkout -b feature/amazing-feature`
+3. **Install** dependencies and set up development environment
+4. **Make** your changes with proper testing
+5. **Commit** with descriptive messages: `git commit -m 'Add amazing feature'`
+6. **Push** to your branch: `git push origin feature/amazing-feature`
+7. **Open** a Pull Request with detailed description
+
+### **📋 Contribution Guidelines**
+- Follow existing code style and conventions
+- Add tests for new functionality
+- Update documentation for any API changes
+- Ensure all tests pass before submitting PR
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for complete details.
 
-## 🆘 Support
+## 🏆 Acknowledgments
 
-For support and questions:
-- Create an issue in the GitHub repository
-- Check the [documentation](docs/)
-- Review the API documentation at `/docs` endpoint
+### **🙏 Technology Partners**
+- **OpenAI** - Advanced AI capabilities with GPT-4 integration
+- **FastAPI Team** - High-performance Python web framework
+- **Next.js Team** - Modern React framework with excellent developer experience
+- **Google Cloud** - Reliable API services for Sheets integration
 
-## 🔍 API Reference
+### **🌟 Special Thanks**
+- **Solar Industry Professionals** - Domain expertise and real-world testing
+- **Open Source Community** - Foundational libraries and frameworks
+- **Beta Testers** - Valuable feedback and bug reports
 
-### **Core Endpoints**
+## 📞 Support & Contact
 
-#### Dashboard Stats
-```http
-GET /stats/
-```
-Returns KPI metrics including efficiency ratings, open procurements, and next shortfall predictions.
+### **🆘 Getting Help**
+- **GitHub Issues**: [Create an issue](https://github.com/96satyam/inventoryassistant/issues) for bugs or feature requests
+- **Documentation**: Check our comprehensive guides in the `/docs` directory
+- **Email Support**: Contact the development team for enterprise inquiries
 
-#### Inventory Management
-```http
-GET /inventory/
-```
-Retrieves current inventory levels with stock status indicators.
+### **🔗 Connect With Us**
+- **GitHub**: [@96satyam](https://github.com/96satyam)
+- **Project Repository**: [inventoryassistant](https://github.com/96satyam/inventoryassistant)
 
-#### Demand Forecasting
-```http
-GET /forecast/
-```
-Provides AI-generated demand forecasts and shortage predictions.
+---
 
-#### Vendor Suggestions
-```http
-GET /suggestions/
-```
-Returns intelligent vendor recommendations with purchase order suggestions.
+## 🌟 **Built with ❤️ for the Solar Energy Industry**
 
-#### Document Processing
-```http
-POST /run-pipeline
-Content-Type: multipart/form-data
+**Empowering solar installers with intelligent automation and professional-grade inventory management.**
 
-{
-  "file": <PDF_FILE>
-}
-```
-Processes uploaded documents and extracts equipment information.
-
-#### Email Integration
-```http
-POST /procurement/send-email
-Content-Type: application/json
-
-{
-  "vendor": "SolarEdge",
-  "items": {"U650 Optimizer": 15},
-  "shipping_address": "123 Solar Lane, Delhi",
-  "need_by": "2025-07-05",
-  "to_email": "vendor@example.com"
-}
-```
-
-## 🐛 Troubleshooting
-
-### **Common Issues**
-
-#### **1. API Connection Errors**
-```bash
-Error: Failed to fetch from http://localhost:8000
-```
-**Solution**: Ensure the backend server is running on port 8000
-```bash
-cd apps/api_core
-uvicorn app.main:app --reload --port 8000
-```
-
-#### **2. Cross-Origin Request Blocked**
-```bash
-⚠ Blocked cross-origin request from 192.168.0.80
-```
-**Solution**: Update `next.config.js` with your network IP:
-```javascript
-allowedDevOrigins: ['your-network-ip:3001']
-```
-
-#### **3. OpenAI API Errors**
-```bash
-Error: OpenAI API key not found
-```
-**Solution**: Set your OpenAI API key in `.env`:
-```env
-OPENAI_API_KEY=sk-your-key-here
-```
-
-#### **4. Email Sending Failures**
-```bash
-Error: SMTP authentication failed
-```
-**Solution**: Configure email settings in `.env`:
-```env
-MAIL_USER=your_email@gmail.com
-MAIL_PASSWORD=your_app_password
-```
-
-#### **5. Module Import Errors**
-```bash
-ModuleNotFoundError: No module named 'langchain'
-```
-**Solution**: Install dependencies:
-```bash
-pip install -r requirements.txt
-```
-
-### **Performance Optimization**
-
-#### **Frontend Optimization**
-- Enable Turbopack for faster builds: `npm run dev`
-- Use SWR caching for API calls
-- Implement lazy loading for large components
-
-#### **Backend Optimization**
-- Use async/await for database operations
-- Implement connection pooling
-- Cache frequently accessed data
-
-## 📊 Data Models
-
-### **Inventory Item**
-```python
-{
-  "name": "SolarEdge U650 Optimizer",
-  "category": "optimizer",
-  "available": 45,
-  "required": 60,
-  "vendor": "SolarEdge",
-  "unit_price": 125.00,
-  "last_updated": "2025-01-04T10:30:00Z"
-}
-```
-
-### **Forecast Data**
-```python
-{
-  "item_name": "Jinko Solar Panel 400W",
-  "current_stock": 120,
-  "predicted_demand": 180,
-  "shortage_risk": "high",
-  "recommended_order": 100,
-  "forecast_date": "2025-01-15"
-}
-```
-
-### **Purchase Order**
-```python
-{
-  "vendor": "SolarEdge",
-  "items": [
-    {
-      "name": "U650 Optimizer",
-      "quantity": 15,
-      "unit_price": 125.00
-    }
-  ],
-  "total_amount": 1875.00,
-  "shipping_address": "123 Solar Lane, Delhi",
-  "need_by": "2025-07-05",
-  "status": "pending"
-}
-```
-
-## 🔐 Security
-
-### **API Security**
-- CORS configuration for cross-origin requests
-- Input validation on all endpoints
-- Rate limiting for API calls
-- Secure file upload handling
-
-### **Data Protection**
-- Environment variable management
-- Secure email credential storage
-- Database connection encryption
-- API key protection
-
-### **Best Practices**
-- Regular dependency updates
-- Security audit of uploaded files
-- Monitoring of API usage
-- Backup and recovery procedures
-
-## 🚀 Roadmap
-
-### **Version 1.1 (Q2 2025)**
-- [ ] Advanced analytics dashboard
-- [ ] Mobile app development
-- [ ] Multi-tenant support
-- [ ] Enhanced AI models
-
-### **Version 1.2 (Q3 2025)**
-- [ ] Integration with ERP systems
-- [ ] Advanced reporting features
-- [ ] Automated vendor negotiations
-- [ ] IoT device integration
-
-### **Version 2.0 (Q4 2025)**
-- [ ] Machine learning model improvements
-- [ ] Real-time collaboration features
-- [ ] Advanced workflow automation
-- [ ] Enterprise-grade security
-
-## 🙏 Acknowledgments
-
-- OpenAI for GPT models and AI capabilities
-- LangChain community for AI framework development
-- Next.js team for the excellent React framework
-- FastAPI for the high-performance backend framework
-- Tailwind CSS for the utility-first styling approach
-- The open-source community for various libraries and tools
+*Transform your solar installation business with AI-powered efficiency and seamless workflow automation.*

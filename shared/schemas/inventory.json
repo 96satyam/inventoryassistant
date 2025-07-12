@@ -1,0 +1,73 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Inventory Item Schema",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier for the inventory item"
+    },
+    "name": {
+      "type": "string",
+      "description": "Name of the inventory item",
+      "minLength": 1,
+      "maxLength": 255
+    },
+    "category": {
+      "type": "string",
+      "enum": ["modules", "optimizers", "inverters", "batteries", "rails", "clamps", "disconnects", "conduits"],
+      "description": "Category of the inventory item"
+    },
+    "brand": {
+      "type": "string",
+      "description": "Brand of the inventory item",
+      "minLength": 1,
+      "maxLength": 100
+    },
+    "quantity": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Current quantity in stock"
+    },
+    "unit": {
+      "type": "string",
+      "description": "Unit of measurement",
+      "examples": ["pcs", "kg", "m", "ft"]
+    },
+    "price": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Price per unit"
+    },
+    "vendor": {
+      "type": "string",
+      "description": "Primary vendor for this item"
+    },
+    "lastUpdated": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last update timestamp"
+    },
+    "minStock": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Minimum stock level threshold"
+    },
+    "maxStock": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Maximum stock level threshold"
+    },
+    "location": {
+      "type": "string",
+      "description": "Storage location"
+    },
+    "specifications": {
+      "type": "object",
+      "description": "Technical specifications",
+      "additionalProperties": true
+    }
+  },
+  "required": ["id", "name", "category", "brand", "quantity", "unit", "lastUpdated"],
+  "additionalProperties": false
+}

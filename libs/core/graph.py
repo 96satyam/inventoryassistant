@@ -1,9 +1,31 @@
 from langgraph.graph import StateGraph, END
 from typing import TypedDict, Optional, Any
 from .schemas import DocumentExtractionResult
-from agents.doc_extractor import extract_equipment_data
-from agents.inventory_checker import check_inventory
-from agents.procurement_bot import send_procurement_email
+
+# Import from the new backend structure
+import sys
+import os
+from pathlib import Path
+
+# Find the solar_installer_ai directory by looking for it in the path
+current_file = Path(__file__).resolve()
+project_root = None
+
+for parent in current_file.parents:
+    if parent.name == "solar_installer_ai":
+        project_root = parent
+        break
+
+if project_root is None:
+    # Fallback: assume we're in libs and go up to find solar_installer_ai
+    project_root = current_file.parent.parent.parent
+
+backend_path = project_root / "backend"
+sys.path.insert(0, str(backend_path))
+
+from app.agents.doc_extractor import extract_equipment_data
+from app.agents.inventory_checker import check_inventory
+from app.agents.procurement_bot import send_procurement_email
 from libs.core.forecast import forecast_shortages
 
 import json, os
