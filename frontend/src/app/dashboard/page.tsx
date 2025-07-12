@@ -41,6 +41,7 @@ import {
 } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
 import { toast } from 'react-hot-toast'
+import { REFRESH_INTERVALS, DISPLAY_LIMITS, BUSINESS_THRESHOLDS } from '@/shared/constants/config'
 import {
   BarChart,
   Bar,
@@ -184,7 +185,7 @@ export default function DashboardPage() {
     }
 
     pullAll()
-    const id = setInterval(pullAll, 20_000)
+    const id = setInterval(pullAll, REFRESH_INTERVALS.DASHBOARD)
     return () => clearInterval(id)
   }, [])
 
@@ -217,7 +218,7 @@ export default function DashboardPage() {
           duration: 6000, // Show for 6 seconds
           position: 'top-right',
         })
-      }, 3600000) // 1 hour = 60 * 60 * 1000 = 3600000 milliseconds
+      }, REFRESH_INTERVALS.NOTIFICATIONS) // 1 hour notification delay
 
       // Cleanup timer if component unmounts or inventory changes
       return () => {
@@ -279,7 +280,7 @@ export default function DashboardPage() {
 
   const urgentTop3  = [...lowItems]
     .sort((a, b) => (b.required - b.available) - (a.required - a.available))
-    .slice(0, 3)
+    .slice(0, DISPLAY_LIMITS.URGENT_ITEMS)
 
   const healthyItems  = inventory.filter(r => r.available >= r.required)
   const healthyPct    = inventory.length
@@ -287,9 +288,9 @@ export default function DashboardPage() {
       : 100
 
   const overstocked = healthyItems
-    .filter(r => r.available >= r.required * 2)          // ≥200 % of need
+    .filter(r => r.available >= r.required * BUSINESS_THRESHOLDS.OVERSTOCKED_MULTIPLIER)          // ≥200 % of need
     .sort((a, b) => (b.available - b.required) - (a.available - a.required))
-    .slice(0, 3)
+    .slice(0, DISPLAY_LIMITS.OVERSTOCKED_ITEMS)
 
   /* ======================================================= */
   return (
@@ -578,7 +579,7 @@ export default function DashboardPage() {
                 </p>
                 <ResponsiveContainer width="100%" height="90%">
                   <BarChart
-                    data={[...forecast].sort((a, b) => b.qty - a.qty).slice(0, 10)}
+                    data={[...forecast].sort((a, b) => b.qty - a.qty).slice(0, DISPLAY_LIMITS.FORECAST_CHART)}
                     layout="vertical"
                     margin={{ left: 90 }}
                   >

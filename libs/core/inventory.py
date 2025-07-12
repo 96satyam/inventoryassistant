@@ -38,9 +38,11 @@ def load_inventory(path: str | None = None, prefer_sheets: bool = True) -> pd.Da
     if prefer_sheets and path is None:
         try:
             from .hybrid_data_manager import get_hybrid_data_manager
-            from ..config.sheets_config import get_sheet_id
 
-            sheet_id = get_sheet_id()
+            # Try to get sheet ID from environment or config
+            import os
+            sheet_id = os.getenv('GOOGLE_SHEET_ID', '1aBW1vma8eF1iNzo5_aB3S2a_a7zS4Tp1vWXncvrASls')
+
             if sheet_id:
                 manager = get_hybrid_data_manager(sheet_id)
                 df = manager.load_inventory(prefer_sheets=True)

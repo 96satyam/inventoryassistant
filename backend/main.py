@@ -16,6 +16,7 @@ from app.api.v1.endpoints.inventry import router as inventory_router   # Rename 
 from app.api.v1.endpoints.procurement import router as procurement_router
 from app.api.v1.endpoints.forecast import router as forecast_router
 from app.api.v1.endpoints.stats import router as stats_router
+from app.api.v1.endpoints.install_history import router as install_history_router
 # from app.services import suggestions
 from app.api.v1.endpoints import suggestions_routes
 from app.api.v1.endpoints import sheets_integration
@@ -94,6 +95,7 @@ app.include_router(inventory_router)
 app.include_router(procurement_router)
 app.include_router(forecast_router)
 app.include_router(stats_router)
+app.include_router(install_history_router, prefix="/install-history")
 app.include_router(suggestions_routes.router)
 app.include_router(sheets_integration.router)
 # app.include_router(forecast_top5.router)

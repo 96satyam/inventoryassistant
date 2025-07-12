@@ -50,9 +50,10 @@ export const NOTIFICATION_TYPES = [
 ] as const;
 
 export const REFRESH_INTERVALS = {
-  DASHBOARD: 5 * 60 * 1000, // 5 minutes
+  DASHBOARD: 20 * 1000, // 20 seconds (matches current dashboard)
+  SHEETS: 5 * 60 * 1000, // 5 minutes (matches current sheets)
   INVENTORY: 10 * 60 * 1000, // 10 minutes
-  NOTIFICATIONS: 60 * 60 * 1000, // 1 hour
+  NOTIFICATIONS: 60 * 60 * 1000, // 1 hour (matches current notification delay)
 } as const;
 
 export const CHART_COLORS = {
@@ -67,4 +68,24 @@ export const CHART_COLORS = {
 export const GOOGLE_SHEETS_CONFIG = {
   SCOPES: ['https://www.googleapis.com/auth/spreadsheets'],
   DISCOVERY_DOC: 'https://sheets.googleapis.com/$discovery/rest?version=v4',
+} as const;
+
+// Display limits for data tables and charts
+export const DISPLAY_LIMITS = {
+  URGENT_ITEMS: 3, // Top urgent items to show
+  FORECAST_CHART: 10, // Items in forecast chart
+  FORECAST_TABLE: 10, // Items in forecast table
+  PROCUREMENT_LOGS: 20, // Recent procurement logs
+  HISTORY_CHART: 8, // Items in history vs forecast chart
+  RECENT_ACTIVITY: 10, // Recent activity items
+  OVERSTOCKED_ITEMS: 3, // Overstocked items to show
+  ANALYTICS_DAYS: 10, // Days to show in analytics
+} as const;
+
+// Business logic thresholds
+export const BUSINESS_THRESHOLDS = {
+  OVERSTOCKED_MULTIPLIER: 2, // 200% of required = overstocked
+  FUTURE_INSTALLATIONS: 10, // Number of future installations to forecast
+  TOP_URGENT_COUNT: 5, // Top urgent items in forecast
+  DEFAULT_ETA_DAYS: 10, // Default ETA for unknown vendors
 } as const;

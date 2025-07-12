@@ -13,6 +13,18 @@ sys.path.insert(0, str(project_root))
 # Centralised vendor/ETA helpers
 from libs.core.vendor_maps import vendor_map, eta_map
 
+# Import business constants
+try:
+    from shared.constants.config import BUSINESS_THRESHOLDS
+    DEFAULT_INSTALLATIONS = BUSINESS_THRESHOLDS['FUTURE_INSTALLATIONS']
+    DEFAULT_TOP_URGENT = BUSINESS_THRESHOLDS['TOP_URGENT_COUNT']
+    DEFAULT_ETA_DAYS = BUSINESS_THRESHOLDS['DEFAULT_ETA_DAYS']
+except ImportError:
+    # Fallback values if config not available
+    DEFAULT_INSTALLATIONS = 10
+    DEFAULT_TOP_URGENT = 5
+    DEFAULT_ETA_DAYS = 10
+
 VENDOR_MAP: Dict[str, str] = vendor_map()
 ETA_MAP:    Dict[str, str] = eta_map()
 

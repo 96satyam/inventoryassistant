@@ -7,6 +7,12 @@
 .env.staging
 .env.development
 .env.test
+**/.env
+**/.env.local
+**/.env.production
+**/.env.staging
+**/.env.development
+**/.env.test
 
 # ── Credentials and Secrets ────────────────────────────────────────
 sheets_credentials.json

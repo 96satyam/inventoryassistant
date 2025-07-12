@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { REFRESH_INTERVALS } from '@/shared/constants/config'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -440,8 +441,8 @@ export default function SheetsPage() {
     // Add initial log entry
     addChangeLog('System', 'Sheets page loaded - monitoring started', 'System')
 
-    // Auto-refresh every 5 minutes (300 seconds)
-    const refreshInterval = setInterval(refreshData, 300000)
+    // Auto-refresh every 5 minutes
+    const refreshInterval = setInterval(refreshData, REFRESH_INTERVALS.SHEETS)
 
     // Countdown timer - updates every second
     const countdownInterval = setInterval(() => {
@@ -810,7 +811,9 @@ export default function SheetsPage() {
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium text-gray-600">Records:</span>
-                      <span className="text-sm font-bold text-blue-700">11 Items</span>
+                      <span className="text-sm font-bold text-blue-700">
+                        {status?.data_sources?.inventory?.length || 0} Items
+                      </span>
                     </div>
                   </div>
 
@@ -865,7 +868,9 @@ export default function SheetsPage() {
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium text-gray-600">Records:</span>
-                      <span className="text-sm font-bold text-blue-700">20 Installations</span>
+                      <span className="text-sm font-bold text-blue-700">
+                        {status?.data_sources?.install_history?.length || 0} Installations
+                      </span>
                     </div>
                   </div>
 

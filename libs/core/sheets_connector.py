@@ -44,7 +44,9 @@ class GoogleSheetsConnector:
         """Find Google Sheets credentials file"""
         project_root = Path(__file__).resolve().parents[2]
         possible_paths = [
+            project_root / "backend" / "sheets_credentials.json",  # Primary location
             project_root / "sheets_credentials.json",
+            project_root / "backend" / "sheets_credentials.json.json",  # Alternative naming
             project_root / "config" / "sheets_credentials.json",
             project_root / "credentials" / "sheets_credentials.json",
             Path.home() / "sheets_credentials.json"

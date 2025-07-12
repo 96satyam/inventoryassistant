@@ -35,6 +35,7 @@ import {
   ShoppingCart
 } from 'lucide-react'
 import { apiFetch, API_ENDPOINTS } from '@/lib/api-config'
+import { DISPLAY_LIMITS } from '@/shared/constants/config'
 
 // Types - Using same interfaces as dashboard for consistency
 interface InventoryRow {
@@ -95,12 +96,12 @@ export default function AnalyticsPage() {
       if (Array.isArray(inventoryRes)) {
         inventoryRes.forEach((row: any, index: number) => {
           try {
-            // Only process modules to avoid errors
-            if (row && typeof row === 'object' && row['no._of_modules'] && row.module_company) {
+            // Use the correct field names from the frontend API
+            if (row && typeof row === 'object' && row.available !== undefined && row.required !== undefined && row.name) {
               processedInventory.push({
-                name: row.module_company,
-                available: Number(row['no._of_modules']) || 0,
-                required: Math.floor((Number(row['no._of_modules']) || 0) * 1.3)
+                name: row.name,
+                available: Number(row.available) || 0,
+                required: Number(row.required) || 0
               })
             }
           } catch (err) {
@@ -110,10 +111,10 @@ export default function AnalyticsPage() {
       }
 
       // Simple forecast processing
-      const processedForecast = Array.isArray(forecastRes) ? forecastRes.slice(0, 10) : []
+      const processedForecast = Array.isArray(forecastRes) ? forecastRes.slice(0, DISPLAY_LIMITS.FORECAST_TABLE) : []
 
       // Simple logs processing
-      const processedLogs = Array.isArray(logsRes) ? logsRes.slice(0, 20) : []
+      const processedLogs = Array.isArray(logsRes) ? logsRes.slice(0, DISPLAY_LIMITS.PROCUREMENT_LOGS) : []
 
       console.log('✅ Processed data:', {
         inventory: processedInventory,
@@ -166,7 +167,7 @@ export default function AnalyticsPage() {
   })).filter(item => item.inventory > 0)
 
   // 2. History vs Forecasting Chart Data (using procurement logs as history)
-  const historyForecastData = (data.forecast || []).slice(0, 8).map(item => {
+  const historyForecastData = (data.forecast || []).slice(0, DISPLAY_LIMITS.HISTORY_CHART).map(item => {
     const modelName = item.model || 'Unknown'
     const displayName = modelName.length > 12 ? modelName.substring(0, 12) + '...' : modelName
 
@@ -254,7 +255,7 @@ export default function AnalyticsPage() {
         ...data,
         dateKey // Keep the original date key for debugging
       }))
-      .slice(-10) // Show last 10 days only
+      .slice(-DISPLAY_LIMITS.ANALYTICS_DAYS) // Show last N days only
 
     // Verify no duplicate dates in final data
     const finalDates = sortedData.map(d => d.date)
@@ -433,7 +434,7 @@ export default function AnalyticsPage() {
                 Procurement History
               </h3>
               <span className="text-sm text-slate-500 dark:text-slate-400">
-                (Last 10 days)
+                (Last {DISPLAY_LIMITS.ANALYTICS_DAYS} days)
               </span>
             </div>
 
