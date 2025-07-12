@@ -22,11 +22,36 @@ def _normalise(df: pd.DataFrame) -> pd.DataFrame:
 # 2. public helpers
 # ---------------------------------------------------------------------------
 
-def load_inventory(path: str | None = None) -> pd.DataFrame:
+def load_inventory(path: str | None = None, prefer_sheets: bool = True) -> pd.DataFrame:
     """
-    Return the raw Excel sheet **with normalised column names**.
-    Other modules can then choose the columns they need.
+    Return the raw inventory data **with normalised column names**.
+    Now supports both Excel and Google Sheets with seamless fallback.
+
+    Args:
+        path: Optional path to Excel file (for backward compatibility)
+        prefer_sheets: If True, try Google Sheets first, then fallback to Excel
+
+    Returns:
+        pd.DataFrame: Normalized inventory data
     """
+    # Try Google Sheets integration if enabled
+    if prefer_sheets and path is None:
+        try:
+            from .hybrid_data_manager import get_hybrid_data_manager
+            from ..config.sheets_config import get_sheet_id
+
+            sheet_id = get_sheet_id()
+            if sheet_id:
+                manager = get_hybrid_data_manager(sheet_id)
+                df = manager.load_inventory(prefer_sheets=True)
+                if not df.empty:
+                    return df
+        except Exception as e:
+            # Silently fall back to Excel if Google Sheets fails
+            import logging
+            logging.getLogger(__name__).debug(f"Google Sheets fallback: {e}")
+
+    # Original Excel-based loading (backward compatibility)
     if path is None:
         # Get the project root directory (where data folder is located)
         from pathlib import Path

@@ -27,8 +27,8 @@ def get_stats():
     below_min  = df[df["available"] < df["required"]]
     open_pr    = len(below_min)
 
-    # forecast for next 14 installs
-    next_sf    = forecast_shortages(n_future_jobs=14)
+    # forecast for next 10 installations (professional solar installer approach)
+    next_sf    = forecast_shortages(n_future_installations=10)
 
     return {
         "efficiency":        efficiency,

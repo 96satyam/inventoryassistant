@@ -39,16 +39,16 @@ export const AUTHORIZED_USERS: Record<string, UserCredentials> = {
  */
 export const validateCredentials = (username: string, password: string): UserCredentials | null => {
   const user = AUTHORIZED_USERS[username.toLowerCase()]
-  
+
   if (!user) {
     return null
   }
-  
+
   // Simple password comparison (in production, use proper hashing)
   if (user.password === password) {
     return user
   }
-  
+
   return null
 }
 

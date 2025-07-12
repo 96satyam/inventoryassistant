@@ -459,6 +459,10 @@ export default function UploadForm() {
                   >
                     <div className="flex items-center justify-center gap-6 text-sm text-emerald-700 dark:text-emerald-300">
                       <div className="flex items-center gap-2">
+                        <CheckCircle className="h-4 w-4" />
+                        <span>Email Delivered Successfully</span>
+                      </div>
+                      <div className="flex items-center gap-2">
                         <Users className="h-4 w-4" />
                         <span>Team Notified</span>
                       </div>

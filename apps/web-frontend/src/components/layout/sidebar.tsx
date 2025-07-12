@@ -15,7 +15,8 @@ import {
   Sparkles,
   Activity,
   ChevronLeft,
-  Menu
+  Menu,
+  FileSpreadsheet
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -199,6 +200,13 @@ function NavLinks({ isCollapsed = false }: { isCollapsed?: boolean }) {
       icon: TrendingUp,
       color: "from-orange-500 to-orange-600",
       description: "Predictive Analytics"
+    },
+    {
+      label: "Google Sheets",
+      href: "/sheets",
+      icon: FileSpreadsheet,
+      color: "from-green-500 to-green-600",
+      description: "Real-time Data Sync"
     },
   ]
 

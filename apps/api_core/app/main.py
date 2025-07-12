@@ -18,6 +18,7 @@ from .routes.forecast import router as forecast_router
 from .routes.stats import router as stats_router
 # from .services import suggestions
 from .routes import suggestions_routes
+from .routes import sheets_integration
 # from apps.api_core.app.routes import forecast_top5
 # from apscheduler.schedulers.background import BackgroundScheduler
 # from libs.core.forecast import forecast_shortages
@@ -94,6 +95,7 @@ app.include_router(procurement_router)
 app.include_router(forecast_router)
 app.include_router(stats_router)
 app.include_router(suggestions_routes.router)
+app.include_router(sheets_integration.router)
 # app.include_router(forecast_top5.router)
 # app.include_router(whatsapp_routes.router)
 

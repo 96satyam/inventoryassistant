@@ -125,109 +125,53 @@ export default function DashboardPage() {
     autoStart: true
   })
 
-  /* ---- API pull with enhanced data consistency ---- */
+  /* ---- SIMPLIFIED API pull with live Google Sheets data ---- */
   const pullAll = async () => {
     try {
-      const { apiFetch, API_ENDPOINTS, getApiBaseUrl } = await import("@/lib/api-config")
-      const {
-        isBackendAvailable,
-        getDataWithFallback,
-        FALLBACK_STATS,
-        FALLBACK_INVENTORY,
-        FALLBACK_FORECAST,
-        FALLBACK_LOGS
-      } = await import("@/utils/fallback-data")
-      const {
-        normalizeInventoryData,
-        normalizeForecastData,
-        normalizeStatsData,
-        normalizeProcurementLogs,
-        logDataSource,
-        validateDataConsistency
-      } = await import("@/utils/data-normalizer")
+      console.log('🔄 Dashboard: Fetching live Google Sheets data...');
 
-      // Check if backend is available
-      const backendAvailable = await isBackendAvailable(getApiBaseUrl())
+      // Direct fetch from our live APIs - no complex validation or fallbacks
+      const [statsResponse, inventoryResponse, forecastResponse, logsResponse] = await Promise.all([
+        fetch('/api/stats'),
+        fetch('/api/inventory'),
+        fetch('/api/forecast'),
+        fetch('/api/procurement/logs')
+      ]);
 
-      if (!backendAvailable) {
-        console.log('📡 Dashboard: Backend not available, using fallback data')
-        // Use normalized fallback data
-        setStats(normalizeStatsData(FALLBACK_STATS))
-        setInv(normaliseInventory(normalizeInventoryData(FALLBACK_INVENTORY)))
-        setForecast(normalizeForecastData(FALLBACK_FORECAST))
-        setLogs(normalizeProcurementLogs(FALLBACK_LOGS))
-        return
-      }
+      const statsData = await statsResponse.json();
+      const inventoryData = await inventoryResponse.json();
+      const forecastData = await forecastResponse.json();
+      const logsData = await logsResponse.json();
 
-      // Try to fetch from backend with enhanced error handling
-      const [s, i, f, l] = await Promise.all([
-        getDataWithFallback(
-          async () => {
-            const response = await apiFetch(API_ENDPOINTS.STATS)
-            const data = await response.json()
-            logDataSource('/stats/', data)
-            return validateDataConsistency(data, 'stats') ? data : FALLBACK_STATS
-          },
-          FALLBACK_STATS
-        ),
-        getDataWithFallback(
-          async () => {
-            const response = await apiFetch(API_ENDPOINTS.INVENTORY)
-            const data = await response.json()
-            logDataSource('/inventory/', data)
-            return validateDataConsistency(data, 'inventory') ? data : FALLBACK_INVENTORY
-          },
-          FALLBACK_INVENTORY
-        ),
-        getDataWithFallback(
-          async () => {
-            const response = await apiFetch(API_ENDPOINTS.FORECAST)
-            const data = await response.json()
-            logDataSource('/forecast/', data)
-            return validateDataConsistency(data, 'forecast') ? data : FALLBACK_FORECAST
-          },
-          FALLBACK_FORECAST
-        ),
-        getDataWithFallback(
-          async () => {
-            const response = await apiFetch(API_ENDPOINTS.PROCUREMENT_LOGS)
-            const data = await response.json()
-            logDataSource('/procurement/logs', data)
-            return validateDataConsistency(data, 'logs') ? data : FALLBACK_LOGS
-          },
-          FALLBACK_LOGS
-        ),
-      ])
+      console.log('� Live stats data:', statsData);
+      console.log('� Live inventory data:', inventoryData);
+      console.log('� Live forecast data:', forecastData);
+      console.log('📋 Live procurement logs:', logsData);
 
-      // Normalize all data for consistency
-      setStats(normalizeStatsData(s))
-      setInv(normaliseInventory(normalizeInventoryData(i ?? [])))
-      setForecast(normalizeForecastData(f))
-      setLogs(normalizeProcurementLogs(l))
+      // Set data directly without complex normalization
+      setStats(statsData);
+      setInv(inventoryData); // Already in correct format
+      setForecast(forecastData);
+      setLogs(logsData); // Live procurement logs
+
+      console.log('✅ Dashboard data updated with live Google Sheets data');
 
     } catch (error) {
-      console.error('Dashboard data fetch error:', error)
+      console.error('❌ Dashboard data fetch error:', error);
 
-      // Load normalized fallback data on error
-      const {
-        FALLBACK_STATS,
-        FALLBACK_INVENTORY,
-        FALLBACK_FORECAST,
-        FALLBACK_LOGS
-      } = await import("@/utils/fallback-data")
-      const {
-        normalizeInventoryData,
-        normalizeForecastData,
-        normalizeStatsData,
-        normalizeProcurementLogs
-      } = await import("@/utils/data-normalizer")
-
-      setStats(normalizeStatsData(FALLBACK_STATS))
-      setInv(normaliseInventory(normalizeInventoryData(FALLBACK_INVENTORY)))
-      setForecast(normalizeForecastData(FALLBACK_FORECAST))
-      setLogs(normalizeProcurementLogs(FALLBACK_LOGS))
+      // Use simple fallback data
+      setStats({
+        total_skus: 0,
+        healthy_stock: 0,
+        low_stock: 0,
+        forecasted: 0,
+        efficiency: 0
+      });
+      setInv([]);
+      setForecast([]);
+      setLogs([]);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
@@ -296,6 +240,22 @@ export default function DashboardPage() {
     saveAs(
       new Blob([csv], { type: 'text/csv' }),
       `procurement_${Date.now()}.csv`,
+    )
+  }
+
+  /* Inventory CSV export */
+  const exportInventoryCSV = () => {
+    const header = ['Item', 'Available', 'Required', 'Status']
+    const rows = inventory.map(item => [
+      item.name,
+      item.available,
+      item.required,
+      item.available < item.required ? 'Low' : 'OK'
+    ])
+    const csv = [header, ...rows].map(r => r.join(',')).join('\n')
+    saveAs(
+      new Blob([csv], { type: 'text/csv' }),
+      `inventory_${Date.now()}.csv`,
     )
   }
 
@@ -378,6 +338,25 @@ export default function DashboardPage() {
                   </div>
                 </div>
               </div>
+            </div>
+
+            {/* Debug Controls */}
+            <div className="flex gap-2 mb-4">
+              <Button
+                onClick={() => {
+                  console.log('🔄 Manual refresh triggered');
+                  console.log('📊 Current stats:', stats);
+                  console.log('📦 Current inventory:', inventory);
+                  console.log('📈 Current forecast:', forecast);
+                  pullAll();
+                }}
+                size="sm"
+                variant="outline"
+                className="border-blue-200 hover:bg-blue-50"
+              >
+                <Activity className="h-4 w-4 mr-1" />
+                Force Refresh & Debug
+              </Button>
             </div>
 
             {/* Quick Stats Bar */}
@@ -679,7 +658,7 @@ export default function DashboardPage() {
     </motion.div>
 
         {/* ---------- ENHANCED TABLES ---------- */}
-        <EnhancedInventoryTable data={inventory} />
+        <EnhancedInventoryTable data={inventory} onDownload={exportInventoryCSV} />
         <EnhancedProcurementTable logs={logs} onDownload={exportCSV} />
       </div>
     </div>
@@ -1095,11 +1074,43 @@ function HealthModal({
 }
 
 /* ---------- Enhanced Inventory table ---------- */
-function EnhancedInventoryTable({ data }: { data: InventoryRow[] }) {
+function EnhancedInventoryTable({
+  data,
+  onDownload
+}: {
+  data: InventoryRow[]
+  onDownload: () => void
+}) {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>📦 Current Inventory</CardTitle>
+    <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
+      <CardHeader className="bg-gradient-to-r from-white to-blue-50 dark:from-slate-800 dark:to-slate-700 border-b border-slate-200 dark:border-slate-600">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+              <Package className="h-5 w-5 text-blue-600" />
+            </div>
+            <div>
+              <CardTitle className="text-lg font-bold text-slate-900 dark:text-white">📦 Current Inventory</CardTitle>
+              <p className="text-sm text-slate-600 dark:text-slate-300 font-medium">Real-time inventory status</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/inventory"
+              className="flex items-center space-x-1 px-3 py-1.5 bg-blue-600 dark:bg-blue-600 text-white dark:text-white rounded-lg text-sm font-medium hover:bg-blue-700 dark:hover:bg-blue-700 transition-colors shadow-sm"
+            >
+              <Eye className="h-4 w-4" />
+              <span>View All</span>
+            </Link>
+            <button
+              onClick={onDownload}
+              className="flex items-center space-x-1 px-3 py-1.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-lg text-sm font-medium hover:bg-green-200 dark:hover:bg-green-900/50 transition-colors"
+            >
+              <FileDown className="h-4 w-4" />
+              <span>Export CSV</span>
+            </button>
+          </div>
+        </div>
       </CardHeader>
       <CardContent>
         <div className="overflow-x-auto">

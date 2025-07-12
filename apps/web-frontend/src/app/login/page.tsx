@@ -18,6 +18,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { toast } from 'react-hot-toast'
 import { authenticateUser, clearAuthState, initializeSession } from '@/utils/authMiddleware'
 import { trackActivity } from '@/utils/activity'
+import { SSO_CONFIG } from '@/config/sso'
+import { isSsoAuthenticated } from '@/services/sso'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -31,10 +33,17 @@ export default function LoginPage() {
   // Initialize session when login page loads
   // This marks that user has started a new session
   useEffect(() => {
+    // Check if user is already authenticated via SSO
+    if (isSsoAuthenticated()) {
+      console.log('🔐 User already authenticated via SSO, redirecting...')
+      router.push('/dashboard')
+      return
+    }
+
     // Clear any existing auth state and initialize new session
     clearAuthState()
     initializeSession()
-  }, [])
+  }, [router])
 
   const validateForm = (): boolean => {
     if (!formData.username.trim()) {
@@ -209,6 +218,35 @@ export default function LoginPage() {
               </Button>
             </form>
 
+            {/* SSO Login Option */}
+            {SSO_CONFIG.enabled && (
+              <>
+                <div className="relative my-6">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-slate-300 dark:border-slate-600" />
+                  </div>
+                  <div className="relative flex justify-center text-sm">
+                    <span className="px-2 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400">
+                      Or continue with
+                    </span>
+                  </div>
+                </div>
+
+                <Button
+                  type="button"
+                  onClick={() => {
+                    // Redirect to SSO provider
+                    window.location.href = `${SSO_CONFIG.validationEndpoint}/auth?redirect=${encodeURIComponent(window.location.origin + '/sso-callback')}`;
+                  }}
+                  disabled={loading}
+                  variant="outline"
+                  className="w-full border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium py-3 rounded-lg transition-all duration-200"
+                >
+                  <Shield className="h-4 w-4 mr-2" />
+                  Sign in with SSO
+                </Button>
+              </>
+            )}
 
           </CardContent>
         </Card>

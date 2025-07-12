@@ -7,13 +7,13 @@ router = APIRouter(
     tags=["Forecast"],
 )
 
-def _top5_rows(n_future_jobs: int = 14) -> list[dict]:
+def _top5_rows(n_future_installations: int = 10) -> list[dict]:
     """
     Returns at most five rows: [{name, qty}, …]
     Works with both the *new* and *legacy* shapes returned
     by libs.core.forecast.forecast_shortages().
     """
-    buckets = forecast_shortages(n_future_jobs)
+    buckets = forecast_shortages(n_future_installations)
 
     # ── flatten into one list of dicts [{"model"/"name", "qty"}, …] ──
     if isinstance(buckets, dict):               # preferred format

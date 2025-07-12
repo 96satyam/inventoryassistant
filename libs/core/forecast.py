@@ -55,13 +55,20 @@ def _load_stock() -> Dict[str, int]:
     return stock
 
 
-def _load_demand(n_future_jobs: int = 5) -> Dict[str, int]:
+def _load_demand(n_future_installations: int = 10) -> Dict[str, int]:
+    """
+    Load demand based on next N installations (not days).
+    As a professional solar installer, we predict equipment needs
+    for the next 10 scheduled installations.
+    """
     try:
         hist = pd.read_excel(HISTORY_FILE).fillna(0)
     except FileNotFoundError:
         return {}
 
-    upcoming = hist.tail(n_future_jobs).copy()
+    # Get the last N installations to predict future demand patterns
+    # In real scenario, this would be upcoming scheduled installations
+    upcoming = hist.tail(n_future_installations).copy()
 
     demand: Dict[str, int] = {}
     for col in upcoming.columns:
@@ -96,7 +103,7 @@ def _parse_eta_days(eta: str) -> int:
 
 
 def forecast_shortages(
-    n_future_jobs: int = 5,
+    n_future_installations: int = 10,
     top_n_urgent: int = 5,
 ) -> List[Dict[str, int]]:
     """
@@ -107,7 +114,7 @@ def forecast_shortages(
         ]
     `urgency`  = shortage * (10 – ETA_days)  (higher = worse)
     """
-    demand = _load_demand(n_future_jobs)
+    demand = _load_demand(n_future_installations)
     stock  = _load_stock()
 
     scored: List[Tuple[str, int, int]] = []   # (model, shortage, score)
@@ -117,11 +124,17 @@ def forecast_shortages(
         if shortage == 0:
             continue
 
-        vendor   = VENDOR_MAP.get(model, "Unknown")
+        vendor = VENDOR_MAP.get(model, "Unknown")
+
+        # Skip unknown models to avoid showing "Unknown" suggestions
+        if vendor == "Unknown":
+            continue
+
         eta      = ETA_MAP.get(vendor, "10 days")
         eta_days = _parse_eta_days(eta)
 
-        score = (shortage * (10 - eta_days))     # larger shortage + faster vendor → higher priority
+        # CORRECTED FORMULA: Higher ETA = Higher urgency (need to order sooner)
+        score = shortage * eta_days + (shortage * 2)     # larger shortage + faster vendor → higher priority
         scored.append((model, shortage, score))
 
     # Highest urgency first

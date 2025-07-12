@@ -16,7 +16,12 @@ logger = logging.getLogger(__name__)
 
 # Constants
 EMAIL_TEMPLATE = "email_templates/order_request.html"
-SUPPLIER_EMAIL = "satyam1@wattmonk.com"  # replace with real
+# Multiple recipient emails for automatic procurement notifications
+SUPPLIER_EMAILS = [
+    "satyam1@wattmonk.com",
+    "shivt843@gmail.com",
+    "satyam.tiwari.9695@gmail.com"
+]
 TEMPLATE_DIR = "."
 
 class ProcurementEmailer:
@@ -109,54 +114,55 @@ class ProcurementEmailer:
         return html
     
     def send_procurement_email(
-        self, 
-        shortfall: Dict[str, int], 
-        recipient: Optional[str] = None,
+        self,
+        shortfall: Dict[str, int],
+        recipients: Optional[list] = None,
         subject_prefix: str = "Procurement Request"
     ) -> bool:
         """
-        Send procurement email for equipment shortfall.
-        
+        Send procurement email for equipment shortfall to multiple recipients.
+
         Args:
             shortfall: Dictionary mapping item names to quantities needed
-            recipient: Email recipient (defaults to SUPPLIER_EMAIL)
+            recipients: List of email recipients (defaults to SUPPLIER_EMAILS)
             subject_prefix: Subject line prefix
-            
+
         Returns:
-            bool: True if email sent successfully, False otherwise
+            bool: True if email sent successfully to all recipients, False otherwise
         """
         if not shortfall:
             logger.info("✅ No shortfalls detected. No email sent.")
             return True
-        
-        recipient = recipient or SUPPLIER_EMAIL
+
+        recipients = recipients or SUPPLIER_EMAILS
         
         try:
             # Render email content
             html_content = self._render_template(shortfall)
             subject = f"{subject_prefix}: Equipment Shortfall ({len(shortfall)} items)"
-            
-            logger.info(f"📤 Sending procurement email to {recipient}")
+
+            logger.info(f"📤 Sending procurement email to {len(recipients)} recipients: {', '.join(recipients)}")
             logger.info(f"📊 Items: {len(shortfall)}, Total quantity: {sum(shortfall.values())}")
-            
+
             # Send email using the working yagmail pattern
             yag = yagmail.SMTP(
-                user=os.getenv("MAIL_USER"), 
+                user=os.getenv("MAIL_USER"),
                 password=os.getenv("MAIL_PASS")
             )
-            
+
+            # Send to all recipients
             yag.send(
-                to=recipient, 
-                subject=subject, 
+                to=recipients,  # yagmail supports list of recipients
+                subject=subject,
                 contents=html_content
             )
-            
+
             # Close connection
             yag.close()
-            
-            logger.info(f"✅ Procurement email sent successfully to {recipient}")
+
+            logger.info(f"✅ Procurement email sent successfully to all {len(recipients)} recipients")
             return True
-            
+
         except Exception as e:
             logger.error(f"❌ Failed to send procurement email: {e}")
             logger.error(f"Error type: {type(e).__name__}")

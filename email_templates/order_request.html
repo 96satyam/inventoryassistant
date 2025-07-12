@@ -1,27 +1,174 @@
 <!DOCTYPE html>
-<html>
-  <body>
-    <p>Dear Supplier,</p>
-    <p>Please find below the list of equipment required for upcoming solar installation:</p>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solar Equipment Purchase Order Request</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            border-bottom: 3px solid #007bff;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .company-name {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+            margin: 0;
+        }
+        .subtitle {
+            color: #6c757d;
+            margin: 5px 0 0 0;
+        }
+        .order-info {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 25px;
+        }
+        .order-info h3 {
+            margin-top: 0;
+            color: #495057;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background-color: white;
+        }
+        th {
+            background-color: #007bff;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #dee2e6;
+        }
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        tr:hover {
+            background-color: #e9ecef;
+        }
+        .summary {
+            background-color: #e7f3ff;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            border-left: 4px solid #007bff;
+        }
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #dee2e6;
+        }
+        .contact-info {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        .urgent {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        .total-qty {
+            font-weight: bold;
+            color: #007bff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="company-name">🌞 WattMonk</h1>
+            <p class="subtitle">Professional Solar Equipment & Installation Services</p>
+        </div>
 
-    <table border="1" cellpadding="6" cellspacing="0">
-      <thead>
-        <tr>
-          <th>Model</th>
-          <th>Quantity Needed</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for model, qty in shortfall.items() %}
-        <tr>
-          <td>{{ model }}</td>
-          <td>{{ qty }}</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+        <h2>Purchase Order Request</h2>
 
-    <p>Kindly confirm availability and estimated delivery time.</p>
-    <p>Regards,<br/>Solar Installation Team</p>
-  </body>
+        <div class="order-info">
+            <h3>📋 Order Details</h3>
+            <p><strong>Date:</strong> {{ date }}</p>
+            <p><strong>Total Items:</strong> {{ total_items }}</p>
+            <p><strong>Total Quantity:</strong> <span class="total-qty">{{ total_quantity }} units</span></p>
+            <p><strong>Priority:</strong> <span class="urgent">High Priority - Upcoming Installations</span></p>
+        </div>
+
+        <p>Dear Valued Supplier,</p>
+
+        <p>We hope this message finds you well. We are reaching out to request a quote for the following solar equipment needed for our upcoming installation projects. As a trusted partner in our solar installation network, we value your prompt response and competitive pricing.</p>
+
+        <h3>📦 Equipment Requirements</h3>
+
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 60%;">Equipment Model</th>
+                    <th style="width: 20%; text-align: center;">Quantity Required</th>
+                    <th style="width: 20%; text-align: center;">Unit</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for model, qty in shortfall.items() %}
+                <tr>
+                    <td>{{ model }}</td>
+                    <td style="text-align: center; font-weight: bold;">{{ qty }}</td>
+                    <td style="text-align: center;">pcs</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="summary">
+            <h4>📊 Order Summary</h4>
+            <p>This order consists of <strong>{{ total_items }}</strong> different equipment types with a total quantity of <strong>{{ total_quantity }}</strong> units. These items are required for our scheduled solar installations and are needed to maintain our project timelines.</p>
+        </div>
+
+        <h3>📋 Request Details</h3>
+        <ul>
+            <li><strong>Quote Required:</strong> Please provide unit pricing and total cost</li>
+            <li><strong>Availability:</strong> Confirm current stock levels and availability</li>
+            <li><strong>Delivery Timeline:</strong> Estimated delivery date and shipping method</li>
+            <li><strong>Payment Terms:</strong> Your standard payment terms and conditions</li>
+            <li><strong>Warranty:</strong> Manufacturer warranty details for each item</li>
+        </ul>
+
+        <div class="footer">
+            <p><strong>Next Steps:</strong></p>
+            <p>Please respond with your quote within 24-48 hours if possible, as these items are needed for upcoming installations. If you have any questions about specifications or quantities, please don't hesitate to contact us.</p>
+
+            <p>Thank you for your continued partnership and prompt attention to this request.</p>
+
+            <p><strong>Best regards,</strong></p>
+
+            <div class="contact-info">
+                <p><strong>WattMonk - Procurement Team</strong></p>
+                <p>📧 Email: procurement@wattmonk.com</p>
+                <p>📞 Phone: +1 (555) 123-4567</p>
+                <p>🌐 Website: https://www.wattmonk.com/</p>
+                <p>📍 Address: The Green Suite R, Dover, DE 19901, United States</p>
+            </div>
+        </div>
+    </div>
+</body>
 </html>

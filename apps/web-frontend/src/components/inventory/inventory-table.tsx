@@ -9,9 +9,10 @@ import {
   TableRow,
   TableCell,
 } from "@/components/ui/table"
-import { RefreshCw, AlertTriangle, CheckCircle, Package, TrendingDown, TrendingUp } from "lucide-react"
+import { RefreshCw, AlertTriangle, CheckCircle, Package, TrendingDown, TrendingUp, FileDown } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { apiFetch, API_ENDPOINTS } from "@/lib/api-config"
+import { saveAs } from 'file-saver'
 
 type ComponentItem = {
   name: string
@@ -23,6 +24,22 @@ export default function InventoryTable() {
   const [data, setData] = useState<ComponentItem[]>([])
   const [loading, setLoading] = useState(true)
 
+  // CSV export function
+  const exportInventoryCSV = () => {
+    const header = ['component_name', 'available_quantity', 'required_quantity', 'status']
+    const rows = data.map(item => [
+      item.name,
+      item.available || 0,
+      item.required || 0,
+      item.available < item.required ? 'Low Stock' : 'Sufficient'
+    ])
+    const csv = [header, ...rows].map(r => r.join(',')).join('\n')
+    saveAs(
+      new Blob([csv], { type: 'text/csv' }),
+      `inventory_complete_${Date.now()}.csv`,
+    )
+  }
+
   const fetchData = async () => {
     setLoading(true)
     try {
@@ -33,69 +50,246 @@ export default function InventoryTable() {
       }
 
       const json = await res.json()
+      console.log('📦 Inventory Checker: Raw data from API:', json)
+      console.log('📦 Sample row structure:', json[0])
 
       // Transform each row into individual component items using REAL data
       // ✅ FIXED: Removed Math.random() that was causing data fluctuation
+      // ✅ FIXED: Added deduplication to prevent duplicate component entries
+      // ✅ FIXED: Added name normalization to handle similar component names
       // Now using actual data from Inventry.xlsx for consistent values
-      const components: ComponentItem[] = []
+      const componentMap = new Map<string, ComponentItem>()
+
+      // Helper function to normalize component names for better deduplication
+      const normalizeComponentName = (name: string): string => {
+        return name
+          .trim()
+          .replace(/™/g, '') // Remove trademark symbols
+          .replace(/®/g, '') // Remove registered symbols
+          .replace(/\s+/g, ' ') // Normalize whitespace
+          .toLowerCase()
+      }
+
       json.forEach((row: any) => {
         // Use real data from Excel file instead of random numbers
-        if (row.module_company) {
-          components.push({
-            name: row.module_company,
-            available: Number(row["no._of_modules"]) || 0, // ✅ Real data from Excel
-            required: Math.ceil((Number(row["no._of_modules"]) || 0) * 1.2), // 20% buffer for required
-          })
+        // Process modules - handle both Google Sheets and Excel formats
+        const moduleCompany = row['Module Company'] || row.module_company || row.name
+        const moduleCount = Number(row['No. Of Modules'] || row["no._of_modules"] || row.available) || 0
+
+        console.log(`🔍 Row processing:`, {
+          moduleCompany,
+          moduleCount,
+          rawRow: row
+        })
+
+        if (moduleCompany && moduleCompany.trim()) {
+          const originalName = moduleCompany.trim()
+          const normalizedKey = normalizeComponentName(originalName)
+          const available = moduleCount
+          const required = Math.ceil(available * 1.2) // 20% buffer for required
+
+          console.log(`  📋 Module: ${originalName} = ${available}/${required}`)
+
+          if (componentMap.has(normalizedKey)) {
+            // Sum quantities if component already exists
+            const existing = componentMap.get(normalizedKey)!
+            componentMap.set(normalizedKey, {
+              name: existing.name, // Keep the first name encountered
+              available: existing.available + available,
+              required: existing.required + required,
+            })
+          } else {
+            componentMap.set(normalizedKey, { name: originalName, available, required })
+          }
         }
-        if (row.optimizers_company) {
-          components.push({
-            name: row.optimizers_company,
-            available: Number(row["no._of_optimizers"]) || 0, // ✅ Real data from Excel
-            required: Math.ceil((Number(row["no._of_optimizers"]) || 0) * 1.1), // 10% buffer for required
-          })
+
+        // Process optimizers - handle both Google Sheets and Excel formats
+        const optimizersCompany = row['Optimizers Company'] || row.optimizers_company
+        const optimizersCount = Number(row['No. of Optimizers'] || row["no._of_optimizers"] || row.required) || 0
+
+        if (optimizersCompany && optimizersCompany.trim()) {
+          const originalName = optimizersCompany.trim()
+          const normalizedKey = normalizeComponentName(originalName)
+          const available = optimizersCount
+          const required = Math.ceil(available * 1.1) // 10% buffer for required
+
+          if (componentMap.has(normalizedKey)) {
+            const existing = componentMap.get(normalizedKey)!
+            componentMap.set(normalizedKey, {
+              name: existing.name, // Keep the first name encountered
+              available: existing.available + available,
+              required: existing.required + required,
+            })
+          } else {
+            componentMap.set(normalizedKey, { name: originalName, available, required })
+          }
         }
-        if (row.inverter_company) {
-          components.push({
-            name: row.inverter_company,
-            available: 1, // Inverters typically have 1 unit available per installation
-            required: 1,
-          })
+
+        // Process inverters - handle both Google Sheets and Excel formats
+        const inverterCompany = row['Inverter Company'] || row.inverter_company
+
+        if (inverterCompany && inverterCompany.trim()) {
+          const originalName = inverterCompany.trim()
+          const normalizedKey = normalizeComponentName(originalName)
+          const available = 1 // Inverters typically have 1 unit available per installation
+          const required = 1
+
+          if (componentMap.has(normalizedKey)) {
+            const existing = componentMap.get(normalizedKey)!
+            componentMap.set(normalizedKey, {
+              name: existing.name, // Keep the first name encountered
+              available: existing.available + available,
+              required: existing.required + required,
+            })
+          } else {
+            componentMap.set(normalizedKey, { name: originalName, available, required })
+          }
         }
-        if (row.battery_company) {
-          components.push({
-            name: row.battery_company,
-            available: 1, // Batteries typically have 1 unit available per installation
-            required: 1,
-          })
+
+        // Process batteries - handle both Google Sheets and Excel formats
+        const batteryCompany = row['Battery Company'] || row.battery_company
+
+        if (batteryCompany && batteryCompany.trim()) {
+          const originalName = batteryCompany.trim()
+          const normalizedKey = normalizeComponentName(originalName)
+          const available = 1 // Batteries typically have 1 unit available per installation
+          const required = 1
+
+          if (componentMap.has(normalizedKey)) {
+            const existing = componentMap.get(normalizedKey)!
+            componentMap.set(normalizedKey, {
+              name: existing.name, // Keep the first name encountered
+              available: existing.available + available,
+              required: existing.required + required,
+            })
+          } else {
+            componentMap.set(normalizedKey, { name: originalName, available, required })
+          }
         }
-        if (row.rails) {
-          components.push({
-            name: row.rails,
-            available: 10, // Rails typically come in sets
-            required: 8,
-          })
+
+        // Process rails - handle both Google Sheets and Excel formats
+        const rails = row['Rails'] || row.rails
+
+        if (rails && rails.trim()) {
+          const originalName = rails.trim()
+          const normalizedKey = normalizeComponentName(originalName)
+          const available = Math.floor(moduleCount * 0.8) || 10 // Rails based on module count
+          const required = Math.floor(moduleCount * 0.6) || 8
+
+          if (componentMap.has(normalizedKey)) {
+            const existing = componentMap.get(normalizedKey)!
+            componentMap.set(normalizedKey, {
+              name: existing.name, // Keep the first name encountered
+              available: existing.available + available,
+              required: existing.required + required,
+            })
+          } else {
+            componentMap.set(normalizedKey, { name: originalName, available, required })
+          }
         }
-        if (row.clamps) {
-          components.push({
-            name: row.clamps,
-            available: 20, // Clamps come in bulk
-            required: 15,
-          })
+
+        // Process clamps - handle both Google Sheets and Excel formats
+        const clamps = row['Clamps'] || row.clamps
+
+        if (clamps && clamps.trim()) {
+          const originalName = clamps.trim()
+          const normalizedKey = normalizeComponentName(originalName)
+          const available = Math.floor(moduleCount * 1.5) || 20 // Clamps based on module count
+          const required = Math.floor(moduleCount * 1.2) || 15
+
+          if (componentMap.has(normalizedKey)) {
+            const existing = componentMap.get(normalizedKey)!
+            componentMap.set(normalizedKey, {
+              name: existing.name, // Keep the first name encountered
+              available: existing.available + available,
+              required: existing.required + required,
+            })
+          } else {
+            componentMap.set(normalizedKey, { name: originalName, available, required })
+          }
         }
-        if (row.disconnects) {
-          components.push({
-            name: row.disconnects,
-            available: 5, // Disconnects are electrical components
-            required: 3,
-          })
+
+        // Process disconnects - handle both Google Sheets and Excel formats
+        const disconnects = row['Disconnects'] || row.disconnects
+
+        if (disconnects && disconnects.trim()) {
+          const originalName = disconnects.trim()
+          const normalizedKey = normalizeComponentName(originalName)
+          const available = Math.floor(moduleCount * 0.4) || 5 // Disconnects based on module count
+          const required = Math.floor(moduleCount * 0.3) || 3
+
+          if (componentMap.has(normalizedKey)) {
+            const existing = componentMap.get(normalizedKey)!
+            componentMap.set(normalizedKey, {
+              name: existing.name, // Keep the first name encountered
+              available: existing.available + available,
+              required: existing.required + required,
+            })
+          } else {
+            componentMap.set(normalizedKey, { name: originalName, available, required })
+          }
         }
-        if (row.conduits) {
-          components.push({
-            name: row.conduits,
-            available: 8, // Conduits come in lengths
-            required: 6,
-          })
+
+        // Process conduits - handle both Google Sheets and Excel formats
+        const conduits = row['Conduits'] || row.conduits
+
+        if (conduits && conduits.trim()) {
+          const originalName = conduits.trim()
+          const normalizedKey = normalizeComponentName(originalName)
+          const available = Math.floor(moduleCount * 0.6) || 8 // Conduits based on module count
+          const required = Math.floor(moduleCount * 0.5) || 6
+
+          if (componentMap.has(normalizedKey)) {
+            const existing = componentMap.get(normalizedKey)!
+            componentMap.set(normalizedKey, {
+              name: existing.name, // Keep the first name encountered
+              available: existing.available + available,
+              required: existing.required + required,
+            })
+          } else {
+            componentMap.set(normalizedKey, { name: originalName, available, required })
+          }
         }
+      })
+
+      // Convert Map to Array and remove duplicates
+      const components: ComponentItem[] = Array.from(componentMap.values())
+
+      // Debug logging for deduplication with normalization
+      console.log('📦 Inventory Deduplication Results (Enhanced):', {
+        rawRows: json.length,
+        totalComponentsBeforeDedup: json.length * 8, // Approximate
+        uniqueComponentsAfterDedup: components.length,
+        componentNames: components.map(c => c.name).slice(0, 10), // First 10 names
+        duplicatesRemoved: (json.length * 8) - components.length,
+        sampleComponents: components.slice(0, 5).map(c => ({
+          name: c.name,
+          normalizedKey: normalizeComponentName(c.name),
+          available: c.available,
+          required: c.required
+        }))
+      })
+
+      // Check for any remaining duplicates in final array (by original name)
+      const finalNames = components.map(c => c.name)
+      const uniqueNames = [...new Set(finalNames)]
+      if (finalNames.length !== uniqueNames.length) {
+        console.error('🚨 DUPLICATES STILL EXIST in final array!', {
+          totalComponents: finalNames.length,
+          uniqueNames: uniqueNames.length,
+          duplicateNames: finalNames.filter((name, index) => finalNames.indexOf(name) !== index)
+        })
+      } else {
+        console.log('✅ No duplicates in final component array')
+      }
+
+      // Check for similar names that might need normalization
+      const normalizedNames = components.map(c => normalizeComponentName(c.name))
+      const uniqueNormalizedNames = [...new Set(normalizedNames)]
+      console.log('🔍 Normalization check:', {
+        originalUniqueCount: uniqueNames.length,
+        normalizedUniqueCount: uniqueNormalizedNames.length,
+        normalizationEffective: uniqueNames.length > uniqueNormalizedNames.length
       })
 
       setData(components)
@@ -140,9 +334,18 @@ export default function InventoryTable() {
           </span>
         </div>
 
-        <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-          <Package className="h-4 w-4" />
-          <span>{data.length} Components Tracked</span>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
+            <Package className="h-4 w-4" />
+            <span>{data.length} Components Tracked</span>
+          </div>
+          <button
+            onClick={exportInventoryCSV}
+            className="flex items-center space-x-1 px-3 py-1.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-lg text-sm font-medium hover:bg-green-200 dark:hover:bg-green-900/50 transition-colors"
+          >
+            <FileDown className="h-4 w-4" />
+            <span>Export CSV</span>
+          </button>
         </div>
       </motion.div>
 

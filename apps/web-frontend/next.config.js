@@ -19,6 +19,12 @@ const nextConfig = {
           ? `${process.env.BACKEND_URL || 'http://localhost:8000'}/:path*`
           : 'http://localhost:8000/:path*',
       },
+      {
+        source: '/api/sheets/:path*',
+        destination: process.env.NODE_ENV === 'production'
+          ? `${process.env.BACKEND_URL || 'http://localhost:8000'}/sheets/:path*`
+          : 'http://localhost:8000/sheets/:path*',
+      },
     ];
   },
 

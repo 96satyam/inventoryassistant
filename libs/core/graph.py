@@ -4,7 +4,7 @@ from .schemas import DocumentExtractionResult
 from agents.doc_extractor import extract_equipment_data
 from agents.inventory_checker import check_inventory
 from agents.procurement_bot import send_procurement_email
-from agents.forecaster import forecast_shortages
+from libs.core.forecast import forecast_shortages
 
 import json, os
 from datetime import datetime
@@ -85,7 +85,7 @@ def email_node(state: PipelineState) -> PipelineState:
 
 def forecast_node(state: PipelineState) -> PipelineState:
     print("[forecast_node] Processing forecast")
-    forecast = forecast_shortages(n_future_jobs=5)
+    forecast = forecast_shortages(n_future_installations=10)
 
     # Save forecast to file
     forecast_path = os.path.join("data", "forecast.json")

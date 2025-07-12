@@ -8,8 +8,8 @@ VENDOR_MAP = vendor_map()
 ETA_MAP = eta_map()
 
 
-def generate_po_suggestions(n_days: int = 14) -> list[dict]:
-    shortages = forecast_shortages(n_days)  # {'urgent': [...], 'normal': [...]}
+def generate_po_suggestions(n_installations: int = 10) -> list[dict]:
+    shortages = forecast_shortages(n_installations)  # {'urgent': [...], 'normal': [...]}
     
     combined = shortages.get("urgent", []) + shortages.get("normal", [])
     grouped = defaultdict(list)

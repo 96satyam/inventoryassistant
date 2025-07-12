@@ -7,7 +7,7 @@ router = APIRouter()
 
 @router.get("/whatsapp/send-top5")
 def send_top5_forecast():
-    rows = forecast_shortages(5)[:5]
+    rows = forecast_shortages(n_future_installations=5)[:5]
 
     if not rows:
         return {"error": "No forecast data"}

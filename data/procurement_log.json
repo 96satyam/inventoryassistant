@@ -1,140 +1,143 @@
 [
   {
-    "timestamp": "2025-07-07T18:19:08.148891",
-    "items": {
-      "HANWHA QCELL : Q.PEAK DUO BLK ML-GL10+410": 11,
-      "SOLAREDGE SOLAREDGE USE3800H-USMNBL75": 1
-    }
-  },
-  {
-    "timestamp": "2025-07-07T18:11:52.533554",
+    "timestamp": "2025-07-11T15:43:38.077566",
     "items": {
       "HANWHA QCELL : Q.PEAK DUO BLK ML-GL10+410": 16,
       "TESLA POWERWALL 3 PV INTEGRATED": 1
     }
   },
   {
-    "timestamp": "2025-07-04T13:24:35.332074",
+    "timestamp": "2025-07-10T17:05:28.884036",
+    "items": {
+      "HANWHA QCELL : Q.PEAK DUO BLK ML-GL10+410": 11,
+      "SOLAREDGE U650 POWER OPTIMIZER": 11,
+      "SOLAREDGE ENERGY BANK BAT-10K1P": 1,
+      "SOLAREDGE USE3800H-USMNBL75": 1
+    }
+  },
+  {
+    "timestamp": "2025-07-10T16:31:32.666652",
+    "items": {
+      "HANWHA QCELL: Q.PEAK DUO BLK ML-GL10+410": 11,
+      "SOLAREDGE U650 POWER OPTIMIZER": 11,
+      "SOLAREDGE ENERGY BANK BAT-10K1P": 1,
+      "SOLAREDGE SOLAREDGE USE3800H-USMNBL75": 1
+    }
+  },
+  {
+    "timestamp": "2025-07-10T16:22:51.608154",
+    "items": {
+      "HANWHA QCELL : Q.PEAK DUO BLK ML-GL10+410": 16,
+      "TESLA POWERWALL 3 PV INTEGRATED": 1
+    }
+  },
+  {
+    "timestamp": "2025-07-10T16:10:26.093093",
+    "items": {
+      "HANWHA QCELL : Q.PEAK DUO BLK ML-GL10+410": 11,
+      "SOLAREDGE U650 POWER OPTIMIZER": 11,
+      "SOLAREDGE ENERGY BANK BAT-10K1P": 1,
+      "SOLAREDGE SOLAREDGE USE3800H-USMNBL75": 1
+    }
+  },
+  {
+    "timestamp": "2025-07-10T15:44:39.100306",
+    "items": {
+      "HANWHA QCELL : Q.PEAK DUO BLK ML-GL10+410": 16,
+      "TESLA POWERWALL 3 PV INTEGRATED": 1
+    }
+  },
+  {
+    "timestamp": "2025-07-10T15:31:58.561967",
+    "items": {
+      "HANWHA QCELL : Q.PEAK DUO BLK ML-GL10+410": 16,
+      "TESLA POWERWALL 3 PV INTEGRATED": 1
+    }
+  },
+  {
+    "timestamp": "2025-07-10T12:22:09.231688",
+    "items": {
+      "HANWHA QCELL : Q.PEAK DUO BLK ML-GL10+410": 16,
+      "TESLA POWERWALL 3 PV INTEGRATED": 1
+    }
+  },
+  {
+    "timestamp": "2025-07-10T12:19:22.144803",
     "items": {
       "HANWHA QCELL : Q.PEAK DUO BLK ML-GL10+410": 12,
-      "SOLAREDGE U650 POWER OPTIMIZER": 1
+      "SOLAREDGE U650 POWER OPTIMIZER": 12,
+      "SOLAREDGE ENERGY BANK BAT-10K1P": 1,
+      "SOLAREDGE USE3800H-USMNBL75": 1
     }
   },
   {
-    "timestamp": "2025-07-04T00:33:13.931187",
+    "timestamp": "2025-07-10T12:07:21.721342",
     "items": {
       "HANWHA QCELL : Q.PEAK DUO BLK ML-GL10+410": 11,
+      "SOLAREDGE U650 POWER OPTIMIZER": 11,
+      "SOLAREDGE ENERGY BANK BAT-10K1P": 1,
       "SOLAREDGE SOLAREDGE USE3800H-USMNBL75": 1
     }
   },
   {
-    "timestamp": "2025-07-04T00:23:36.528817",
+    "timestamp": "2025-07-10T11:47:36.988119",
+    "items": {
+      "HANWHA QCELL : Q.PEAK DUO BLK ML-GL10+410": 16,
+      "TESLA POWERWALL 3 PV INTEGRATED": 1
+    }
+  },
+  {
+    "timestamp": "2025-07-10T11:46:01.958751",
     "items": {
       "HANWHA QCELL : Q.PEAK DUO BLK ML-GL10+410": 11,
-      "SOLAREDGE SOLAREDGE USE3800H-USMNBL75": 1
+      "SOLAREDGE U650 POWER OPTIMIZER": 11,
+      "SOLAREDGE ENERGY BANK BAT-10K1P": 1,
+      "SOLAREDGE USE3800H-USMNBL75": 1
     }
   },
   {
-    "timestamp": "2025-07-03T18:15:19.070501",
-    "items": {
-      "HANWHA QCELL : Q.PEAK DUO BLK ML-GL10+410": 11,
-      "SOLAREDGE SOLAREDGE USE3800H-USMNBL75": 1
-    }
-  },
-  {
-    "timestamp": "2025-07-03T18:10:11.517370",
-    "items": {
-      "HANWHA QCELL Q.PEAK DUO BLK ML-GL10+410": 11
-    }
-  },
-  {
-    "timestamp": "2025-07-02T10:11:49.331448",
+    "timestamp": "2025-07-10T11:44:20.546561",
     "items": {
       "HANWHA QCELL : Q.PEAK DUO BLK ML-GL10+410": 12,
-      "SOLAREDGE U650 POWER OPTIMIZER": 1
+      "SOLAREDGE U650 POWER OPTIMIZER": 12,
+      "SOLAREDGE ENERGY BANK BAT-10K1P": 1,
+      "SOLAREDGE USE3800H-USMNBL75": 1
     }
   },
   {
-    "timestamp": "2025-07-01T16:35:28.759564",
-    "items": {
-      "HANWHA QCELL : Q.PEAK DUO BLK ML-GL10+410": 11
-    }
-  },
-  {
-    "timestamp": "2025-07-01T06:00:25.160497",
-    "items": {
-      "Tesla Powerwall 3": 3
-    }
-  },
-  {
-    "timestamp": "2025-07-01T06:00:25.147395",
-    "items": {
-      "LG RESU 10H Prime": 5
-    }
-  },
-  {
-    "timestamp": "2025-07-01T06:00:25.134738",
-    "items": {
-      "Enphase IQ7+ / IQ7A Microinverters": 2
-    }
-  },
-  {
-    "timestamp": "2025-07-01T06:00:25.123704",
-    "items": {
-      "SolarEdge P-Series": 38,
-      "SOLAREDGE U650 POWER OPTIMIZER": 37,
-      "SolarEdge S-Series": 39,
-      "SolarEdge HD-Wave Inverter": 2,
-      "SOLAREDGE USE3800H-USMNBL75": 2,
-      "SolarEdge Home Hub Inverter": 1,
-      "SOLAREDGE ENERGY BANK BAT-10K1P": 3
-    }
-  },
-  {
-    "timestamp": "2025-07-01T06:00:25.110503",
-    "items": {
-      "Tigo TS4-A-S": 32,
-      "Tigo TS4-A-O": 24
-    }
-  },
-  {
-    "timestamp": "2025-07-01T06:00:25.096040",
-    "items": {
-      "Hanwa Qcell": 36,
-      "Q.TRON BLK M-G2": 41,
-      "Q.PEAK DUO XL-G9.2 Series": 25
-    }
-  },
-  {
-    "timestamp": "2025-07-01T06:00:25.084399",
-    "items": {
-      "Maxeon 7 Series": 50
-    }
-  },
-  {
-    "timestamp": "2025-07-01T06:00:25.083394",
-    "items": {
-      "TOPHiKu6 Series": 31
-    }
-  },
-  {
-    "timestamp": "2025-06-30T13:16:59.942084",
+    "timestamp": "2025-07-10T11:34:34.979079",
     "items": {
       "HANWHA QCELL : Q.PEAK DUO BLK ML-GL10+410": 12,
-      "SOLAREDGE U650 POWER OPTIMIZER": 1
+      "SOLAREDGE U650 POWER OPTIMIZER": 12,
+      "SOLAREDGE ENERGY BANK BAT-10K1P": 1,
+      "SOLAREDGE USE3800H-USMNBL75": 1
     }
   },
   {
-    "timestamp": "2025-06-30T13:04:45.492636",
+    "timestamp": "2025-07-10T10:42:37.609658",
     "items": {
       "HANWHA QCELL : Q.PEAK DUO BLK ML-GL10+410": 11,
+      "SOLAREDGE U650 POWER OPTIMIZER": 11,
+      "SOLAREDGE ENERGY BANK BAT-10K1P": 1,
       "SOLAREDGE SOLAREDGE USE3800H-USMNBL75": 1
     }
   },
   {
-    "timestamp": "2025-06-30T12:52:18.890037",
+    "timestamp": "2025-01-07T10:00:00Z",
     "items": {
-      "HANWHA QCELL Q.PEAK DUO BLK ML-GL10+410": 11
-    }
+      "SolarEdge Pro 400W": 20,
+      "Tesla Powerwall 2": 5
+    },
+    "vendor": "SolarEdge",
+    "total_cost": 15000
+  },
+  {
+    "timestamp": "2025-01-06T14:30:00Z",
+    "items": {
+      "Enphase IQ7+ Panel": 15,
+      "Enphase Encharge 10": 3
+    },
+    "vendor": "Enphase",
+    "total_cost": 12000
   }
 ]

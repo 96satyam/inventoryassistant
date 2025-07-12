@@ -18,11 +18,13 @@ import {
   Brain,
   MessageCircle,
   Target,
-  Flame
+  Flame,
+  FileDown
 } from "lucide-react"
 import toast from "react-hot-toast"
 import { apiFetch, API_ENDPOINTS } from "@/lib/api-config"
 import PublicUrlNotice from "@/components/ui/public-url-notice"
+import { saveAs } from 'file-saver'
 
 /* ---------- types ---------- */
 type ForecastRow = {
@@ -121,6 +123,23 @@ export default function ForecastTable() {
     fetchForecast()
   }, [])
 
+  /* CSV export function */
+  const exportForecastCSV = () => {
+    const header = ['model', 'quantity', 'urgency_score', 'is_urgent', 'status']
+    const rows_data = rows.map(row => [
+      row.model,
+      row.qty,
+      row.urgency,
+      row.is_urgent ? 'Yes' : 'No',
+      row.is_urgent ? 'Urgent' : 'Normal'
+    ])
+    const csv = [header, ...rows_data].map(r => r.join(',')).join('\n')
+    saveAs(
+      new Blob([csv], { type: 'text/csv' }),
+      `forecast_complete_${Date.now()}.csv`,
+    )
+  }
+
   /* helpful memo – avoid NaN when list empty */
   const maxUrgency = rows.length
     ? Math.max(...rows.map(r => Number(r.urgency) || 0))
@@ -201,7 +220,16 @@ export default function ForecastTable() {
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5, delay: 0.2 }}
+          className="flex items-center gap-3"
         >
+          <button
+            onClick={exportForecastCSV}
+            disabled={loading || rows.length === 0}
+            className="flex items-center space-x-1 px-3 py-1.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-lg text-sm font-medium hover:bg-green-200 dark:hover:bg-green-900/50 transition-colors disabled:opacity-50"
+          >
+            <FileDown className="h-4 w-4" />
+            <span>Export CSV</span>
+          </button>
           <Button
             size="sm"
             onClick={handleSendWhatsApp}

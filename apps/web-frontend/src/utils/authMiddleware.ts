@@ -6,11 +6,13 @@
  */
 
 import { validateCredentials, type UserCredentials, hasPermission } from './credentials'
+import { isSsoAuthenticated } from '@/services/sso'
 
 export interface AuthState {
   isAuthenticated: boolean
   user: UserCredentials | null
   isLoading: boolean
+  authMethod?: 'credentials' | 'sso'
 }
 
 // Local storage keys
@@ -28,7 +30,24 @@ export const getAuthState = (): AuthState => {
   }
 
   try {
-    // Use sessionStorage instead of localStorage for session-only persistence
+    // Check for SSO authentication first
+    if (isSsoAuthenticated()) {
+      const ssoUserData = {
+        username: localStorage.getItem('userName') || '',
+        email: localStorage.getItem('userEmail') || '',
+        role: localStorage.getItem('role') || 'user',
+        permissions: ['read', 'write'] // Default permissions for SSO users
+      }
+
+      return {
+        isAuthenticated: true,
+        user: ssoUserData as UserCredentials,
+        isLoading: false,
+        authMethod: 'sso'
+      }
+    }
+
+    // Use sessionStorage for regular credential-based auth
     const authState = sessionStorage.getItem(AUTH_STORAGE_KEY)
     const userData = sessionStorage.getItem(USER_STORAGE_KEY)
 
@@ -39,7 +58,8 @@ export const getAuthState = (): AuthState => {
       return {
         isAuthenticated: parsedAuthState.isAuthenticated || false,
         user: parsedUserData,
-        isLoading: false
+        isLoading: false,
+        authMethod: 'credentials'
       }
     }
   } catch (error) {
@@ -131,25 +151,25 @@ export const authenticateUser = async (username: string, password: string): Prom
 }> => {
   // Simulate API call delay
   await new Promise(resolve => setTimeout(resolve, 1000))
-  
+
   const user = validateCredentials(username, password)
-  
+
   if (user) {
     const authState: AuthState = {
       isAuthenticated: true,
       user,
       isLoading: false
     }
-    
+
     saveAuthState(authState)
-    
+
     return {
       success: true,
       user,
       message: 'Login successful'
     }
   }
-  
+
   return {
     success: false,
     message: 'Invalid username or password'

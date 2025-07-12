@@ -186,14 +186,100 @@ export default function AnalyticsPage() {
     }
   }).filter(item => item.forecast > 0)
 
-  // 3. Procurement History Chart Data (monthly trend)
+  // 3. Procurement History Chart Data (using real procurement logs)
   const procurementHistoryData = (() => {
-    const months = ['Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul']
-    return months.map(month => {
-      // Simple mock data based on logs
-      const value = Math.floor(Math.random() * 50) + 20
-      return { month, value }
+    if (!data.logs || data.logs.length === 0) {
+      return []
+    }
+
+    // Group procurement logs by date and calculate total orders per day
+    const dailyOrders: { [key: string]: { date: string, totalOrders: number, totalItems: number, orders: any[] } } = {}
+
+    data.logs.forEach((log, index) => {
+      try {
+        const date = new Date(log.timestamp)
+
+        // Ensure valid date
+        if (isNaN(date.getTime())) {
+          console.warn(`Invalid timestamp at index ${index}:`, log.timestamp)
+          return
+        }
+
+        const dateKey = date.toISOString().split('T')[0] // YYYY-MM-DD format (e.g., "2025-07-04")
+        const displayDate = date.toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric'
+        }) // "Jul 8", "Jul 7", etc.
+
+        // Debug logging for first few entries
+        if (index < 5) {
+          console.log(`Processing log ${index}:`, {
+            timestamp: log.timestamp,
+            dateKey,
+            displayDate,
+            existingEntry: !!dailyOrders[dateKey]
+          })
+        }
+
+        // Initialize the date entry if it doesn't exist
+        if (!dailyOrders[dateKey]) {
+          dailyOrders[dateKey] = {
+            date: displayDate,
+            totalOrders: 0,
+            totalItems: 0,
+            orders: []
+          }
+        }
+
+        // Count total items in this order
+        const itemCount = Object.values(log.items || {}).reduce((sum, qty) => sum + (Number(qty) || 0), 0)
+
+        // Add this order to the daily summary
+        dailyOrders[dateKey].totalOrders += 1
+        dailyOrders[dateKey].totalItems += itemCount
+        dailyOrders[dateKey].orders.push({
+          timestamp: log.timestamp,
+          items: log.items,
+          itemCount
+        })
+      } catch (error) {
+        console.warn(`Error processing log entry at index ${index}:`, log, error)
+      }
     })
+
+    // Convert to array, sort by date (chronologically), and ensure unique dates
+    const sortedData = Object.entries(dailyOrders)
+      .sort(([dateA], [dateB]) => new Date(dateA).getTime() - new Date(dateB).getTime())
+      .map(([dateKey, data]) => ({
+        ...data,
+        dateKey // Keep the original date key for debugging
+      }))
+      .slice(-10) // Show last 10 days only
+
+    // Verify no duplicate dates in final data
+    const finalDates = sortedData.map(d => d.date)
+    const uniqueFinalDates = [...new Set(finalDates)]
+
+    console.log('📊 Procurement History Data (Fixed):', {
+      totalLogs: data.logs.length,
+      uniqueDatesCount: Object.keys(dailyOrders).length,
+      sortedDataCount: sortedData.length,
+      dateKeys: Object.keys(dailyOrders).sort(),
+      finalDates,
+      uniqueFinalDates,
+      hasDuplicates: finalDates.length !== uniqueFinalDates.length,
+      sampleData: sortedData.slice(0, 5).map(d => ({
+        date: d.date,
+        dateKey: d.dateKey,
+        orders: d.totalOrders,
+        items: d.totalItems
+      }))
+    })
+
+    // Return data with unique dates only (just in case)
+    return sortedData.filter((item, index, arr) =>
+      arr.findIndex(other => other.date === item.date) === index
+    )
   })()
 
 
@@ -334,35 +420,144 @@ export default function AnalyticsPage() {
             </ResponsiveContainer>
           </motion.div>
 
-          {/* 3. Procurement History Chart */}
+          {/* 3. Procurement History - Chart + Table Layout */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.4 }}
             className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-lg border border-slate-200 dark:border-slate-700 lg:col-span-2"
           >
-            <div className="flex items-center space-x-2 mb-4">
+            <div className="flex items-center space-x-2 mb-6">
               <LineChartIcon className="h-5 w-5 text-purple-600" />
               <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
                 Procurement History
               </h3>
+              <span className="text-sm text-slate-500 dark:text-slate-400">
+                (Last 10 days)
+              </span>
             </div>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={procurementHistoryData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Line
-                  type="monotone"
-                  dataKey="value"
-                  stroke="#8B5CF6"
-                  strokeWidth={2}
-                  name="Procurement Volume"
-                />
-              </LineChart>
-            </ResponsiveContainer>
+
+            {/* Chart + Table Layout */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+              {/* Left Side - Total Orders Chart */}
+              <div className="space-y-4">
+                <div className="flex items-center space-x-2">
+                  <BarChart3 className="h-4 w-4 text-purple-600" />
+                  <h4 className="text-md font-medium text-slate-700 dark:text-slate-300">
+                    Total Orders by Date
+                  </h4>
+                </div>
+                <div className="h-80">
+                  <ResponsiveContainer width="100%" height="100%">
+                    {procurementHistoryData.length > 0 ? (
+                      <LineChart data={procurementHistoryData}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                        <XAxis
+                          dataKey="date"
+                          tick={{ fontSize: 11, fill: '#64748b' }}
+                          stroke="#64748b"
+                          angle={-45}
+                          textAnchor="end"
+                          height={60}
+                        />
+                        <YAxis
+                          tick={{ fontSize: 11, fill: '#64748b' }}
+                          stroke="#64748b"
+                        />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: '#1e293b',
+                            border: '1px solid #334155',
+                            borderRadius: '8px',
+                            color: '#f1f5f9'
+                          }}
+                          formatter={(value: any) => [`${value} orders`, 'Total Orders']}
+                          labelFormatter={(label: string) => `Date: ${label}`}
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey="totalOrders"
+                          stroke="#8B5CF6"
+                          strokeWidth={3}
+                          name="Total Orders"
+                          dot={{ fill: '#8B5CF6', strokeWidth: 2, r: 5 }}
+                          activeDot={{ r: 7, stroke: '#8B5CF6', strokeWidth: 2 }}
+                        />
+                      </LineChart>
+                    ) : (
+                      <div className="flex items-center justify-center h-full text-slate-500 dark:text-slate-400">
+                        <div className="text-center">
+                          <ShoppingCart className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                          <p>No procurement data</p>
+                        </div>
+                      </div>
+                    )}
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              {/* Right Side - Items by Order Table */}
+              <div className="space-y-4">
+                <div className="flex items-center space-x-2">
+                  <Package className="h-4 w-4 text-green-600" />
+                  <h4 className="text-md font-medium text-slate-700 dark:text-slate-300">
+                    Items by Order & Date
+                  </h4>
+                </div>
+                <div className="h-80 overflow-y-auto border border-slate-200 dark:border-slate-600 rounded-lg">
+                  {procurementHistoryData.length > 0 ? (
+                    <table className="w-full text-sm">
+                      <thead className="bg-slate-50 dark:bg-slate-700 sticky top-0">
+                        <tr>
+                          <th className="px-3 py-2 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                            Date
+                          </th>
+                          <th className="px-3 py-2 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                            Orders
+                          </th>
+                          <th className="px-3 py-2 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                            Total Items
+                          </th>
+                          <th className="px-3 py-2 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                            Avg/Order
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-200 dark:divide-slate-600">
+                        {procurementHistoryData.map((day, index) => (
+                          <tr key={index} className="hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                            <td className="px-3 py-2 text-slate-900 dark:text-white font-medium">
+                              {day.date}
+                            </td>
+                            <td className="px-3 py-2 text-center">
+                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
+                                {day.totalOrders}
+                              </span>
+                            </td>
+                            <td className="px-3 py-2 text-center">
+                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                {day.totalItems}
+                              </span>
+                            </td>
+                            <td className="px-3 py-2 text-center text-slate-600 dark:text-slate-400">
+                              {Math.round(day.totalItems / day.totalOrders)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  ) : (
+                    <div className="flex items-center justify-center h-full text-slate-500 dark:text-slate-400">
+                      <div className="text-center p-6">
+                        <Package className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                        <p className="text-sm">No order data available</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
           </motion.div>
 
 

@@ -15,7 +15,7 @@ export default function Suggestions() {
   const [blocks, setBlocks] = useState<Block[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<'row' | 'column'>('row');
+  const [viewMode, setViewMode] = useState<'row' | 'column'>('column');
 
   useEffect(() => {
     const fetchSuggestions = async () => {
@@ -241,36 +241,121 @@ function VendorCardColumn({
 
   const handleSendPO = async () => {
     if (!email.trim() || !address.trim() || !needBy.trim()) {
-      alert("Please fill in all fields");
+      // Use toast instead of alert for better UX
+      const { toast } = await import("sonner");
+      toast.error("📝 Please fill in all fields before sending.", {
+        description: "Email, shipping address, and need-by date are required.",
+        duration: 4000,
+      });
       return;
     }
 
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      const { toast } = await import("sonner");
+      toast.error("📧 Invalid email format", {
+        description: "Please enter a valid email address.",
+        duration: 4000,
+      });
+      return;
+    }
+
+    console.log("🚀 PO Email Send initiated:", { vendor, email: email.trim(), items: items.length });
+
     setSending(true);
+
+    // Show loading toast
+    const { toast } = await import("sonner");
+    const loadingToast = toast.loading(`📤 Sending purchase order to ${vendor}...`, {
+      description: `Preparing order for ${items.length} items`,
+    });
+
     try {
-      const response = await fetch("/api/send-po", {
+      // Convert items array to dictionary format expected by backend
+      const itemsDict: { [key: string]: number } = {};
+      items.forEach(item => {
+        itemsDict[item.name] = item.qty;
+      });
+
+      const { apiFetch, API_ENDPOINTS } = await import("@/lib/api-config");
+      console.log('📧 Sending PO email...');
+      const response = await apiFetch(API_ENDPOINTS.PROCUREMENT_SEND_EMAIL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           vendor,
+          items: itemsDict,
           email: email.trim(),
-          address: address.trim(),
-          needBy: needBy.trim(),
-          items,
+          shipping_address: address.trim(),
+          need_by: needBy.trim(),
         }),
       });
 
+      const data = await response.json();
+
+      // Dismiss loading toast
+      toast.dismiss(loadingToast);
+
       if (response.ok) {
-        alert(`✅ Purchase order sent to ${vendor}!`);
-        setOpen(false);
+        console.log("✅ PO Email sent successfully - showing success notification");
+        toast.success(`✅ Purchase order sent successfully!`, {
+          description: `Email sent to ${email.trim()} for ${vendor} with ${items.length} items`,
+          duration: 6000,
+          action: {
+            label: "View Details",
+            onClick: () => {
+              console.log("📋 User clicked View Details button");
+              toast.info(`📋 Order Details`, {
+                description: `Vendor: ${vendor}\nItems: ${items.length}\nTotal Qty: ${items.reduce((sum, item) => sum + item.qty, 0)}\nDelivery: ${needBy}`,
+                duration: 8000,
+              });
+            },
+          },
+        });
+
+        // Clear form fields after successful send
         setEmail("");
         setAddress("");
         setNeedBy("");
+        setOpen(false);
       } else {
-        throw new Error("Failed to send email");
+        console.log(`❌ PO Email failed - HTTP ${response.status}:`, data);
+        // Handle specific error cases
+        if (response.status === 400) {
+          toast.error(`❌ Invalid request data`, {
+            description: data.detail || "Please check your input and try again.",
+            duration: 5000,
+          });
+        } else if (response.status === 500) {
+          toast.error(`🔧 Server error occurred`, {
+            description: "Email service is temporarily unavailable. Please try again later.",
+            duration: 5000,
+          });
+        } else {
+          toast.error(`❌ Failed to send email`, {
+            description: data.detail || `HTTP ${response.status}: Unknown error occurred`,
+            duration: 5000,
+          });
+        }
       }
-    } catch (error) {
-      console.error("Error sending PO:", error);
-      alert("❌ Failed to send purchase order. Please try again.");
+    } catch (err) {
+      // Dismiss loading toast
+      toast.dismiss(loadingToast);
+
+      // Handle network errors
+      if (err instanceof TypeError && err.message.includes('fetch')) {
+        toast.error("🌐 Network connection error", {
+          description: "Unable to connect to email server. Please check your internet connection.",
+          duration: 6000,
+        });
+      } else {
+        toast.error("⚠️ Unexpected error occurred", {
+          description: "Could not send email. Please try again or contact support.",
+          duration: 5000,
+        });
+      }
+      console.error("Email send error:", err);
     } finally {
       setSending(false);
     }
@@ -352,68 +437,112 @@ function VendorCardColumn({
         </div>
       </div>
 
-      {/* Modal remains the same as original VendorCard */}
+      {/* Enhanced Modal with Professional Styling */}
       {open && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-slate-800 rounded-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white dark:bg-slate-800 rounded-xl max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-200 dark:border-slate-700">
             <div className="p-6">
-              <h3 className="text-xl font-bold mb-4 text-slate-900 dark:text-white">
-                Send Purchase Order to {vendor}
-              </h3>
-
-              <div className="space-y-4">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                  <span className="text-white text-lg">📧</span>
+                </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">
-                    Email Address
+                  <h3 className="text-xl font-bold text-slate-900 dark:text-white">
+                    Send Purchase Order
+                  </h3>
+                  <p className="text-sm text-slate-600 dark:text-slate-400">
+                    to {vendor}
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-5">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    📧 Email Address
                   </label>
                   <input
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
+                    className="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm hover:shadow-md"
                     placeholder="vendor@example.com"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">
-                    Delivery Address
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    🏢 Delivery Address
                   </label>
                   <textarea
                     value={address}
                     onChange={(e) => setAddress(e.target.value)}
-                    className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
+                    className="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm hover:shadow-md resize-none"
                     rows={3}
-                    placeholder="Enter delivery address..."
+                    placeholder="Enter complete delivery address..."
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">
-                    Need By Date
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    📅 Need By Date
                   </label>
                   <input
                     type="date"
                     value={needBy}
                     onChange={(e) => setNeedBy(e.target.value)}
-                    className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
+                    className="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm hover:shadow-md"
                   />
+                </div>
+
+                {/* Order Summary */}
+                <div className="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-4 border border-slate-200 dark:border-slate-600">
+                  <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">📦 Order Summary</h4>
+                  <div className="space-y-1">
+                    {items.slice(0, 3).map((item, index) => (
+                      <div key={index} className="flex justify-between text-xs text-slate-600 dark:text-slate-400">
+                        <span>{item.name}</span>
+                        <span className="font-medium">{item.qty}</span>
+                      </div>
+                    ))}
+                    {items.length > 3 && (
+                      <div className="text-xs text-slate-500 dark:text-slate-500 italic">
+                        +{items.length - 3} more items
+                      </div>
+                    )}
+                    <div className="border-t border-slate-300 dark:border-slate-600 pt-1 mt-2">
+                      <div className="flex justify-between text-sm font-semibold text-slate-700 dark:text-slate-300">
+                        <span>Total Items:</span>
+                        <span>{totalItems}</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <div className="flex gap-3 mt-6">
+              <div className="flex gap-3 mt-8">
                 <button
                   onClick={() => setOpen(false)}
-                  className="flex-1 px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                  className="flex-1 px-6 py-3 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all duration-200 font-medium shadow-sm hover:shadow-md"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleSendPO}
                   disabled={sending}
-                  className="flex-1 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors disabled:opacity-50"
+                  className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-lg transition-all duration-200 font-semibold shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {sending ? "Sending..." : "Send PO"}
+                  {sending ? (
+                    <div className="flex items-center justify-center gap-2">
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Sending...
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center gap-2">
+                      <span>📤</span>
+                      Send Purchase Order
+                    </div>
+                  )}
                 </button>
               </div>
             </div>

@@ -12,6 +12,7 @@ import { FileDown, Clock, AlertTriangle, Package, ShoppingCart, Calendar, Hash, 
 import { formatDate } from "@/lib/date";
 import { useEffect, useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
+import { saveAs } from 'file-saver';
 
 export type ProcurementEntry = {
   timestamp: string;
@@ -53,6 +54,22 @@ export default function ProcurementTable({
 
   const visibleRows = limit ? flatRows.slice(0, limit) : flatRows;
 
+  // CSV export function
+  const exportProcurementCSV = () => {
+    const header = ['timestamp', 'model', 'quantity', 'date']
+    const rows = flatRows.map(row => [
+      row.timestamp,
+      row.model,
+      row.qty,
+      formatDate(row.timestamp)
+    ])
+    const csv = [header, ...rows].map(r => r.join(',')).join('\n')
+    saveAs(
+      new Blob([csv], { type: 'text/csv' }),
+      `procurement_complete_${Date.now()}.csv`,
+    )
+  }
+
   // Debug logging
   console.log("ProcurementTable Debug:", {
     logs: logs,
@@ -86,9 +103,18 @@ export default function ProcurementTable({
           </span>
         </div>
 
-        <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-          <Clock className="h-4 w-4" />
-          <span>{visibleRows.length} Total Actions</span>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
+            <Clock className="h-4 w-4" />
+            <span>{visibleRows.length} Total Actions</span>
+          </div>
+          <button
+            onClick={exportProcurementCSV}
+            className="flex items-center space-x-1 px-3 py-1.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-lg text-sm font-medium hover:bg-green-200 dark:hover:bg-green-900/50 transition-colors"
+          >
+            <FileDown className="h-4 w-4" />
+            <span>Export CSV</span>
+          </button>
         </div>
       </motion.div>
 

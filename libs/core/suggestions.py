@@ -55,7 +55,7 @@ def _group_by_vendor(rows: List[Dict[str, int]]) -> Dict[str, Dict[str, int]]:
 # --------------------------------------------------------------------------- #
 # public API
 # --------------------------------------------------------------------------- #
-def suggest_purchase_orders(n_future_jobs: int = 14) -> List[Dict]:
+def suggest_purchase_orders(n_future_installations: int = 10) -> List[Dict]:
     """
     Build the data structure the React dashboard expects:
 
@@ -68,7 +68,7 @@ def suggest_purchase_orders(n_future_jobs: int = 14) -> List[Dict]:
           …
         ]
     """
-    buckets = forecast_shortages(n_future_jobs)
+    buckets = forecast_shortages(n_future_installations)
 
     # 1️⃣ Flatten whatever format forecast_shortages returned
     if isinstance(buckets, dict):                   # {"urgent": [...], "normal": [...]}
