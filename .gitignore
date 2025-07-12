@@ -10,12 +10,16 @@
 
 # ── Credentials and Secrets ────────────────────────────────────────
 sheets_credentials.json
+sheets_credentials.json.json
 **/sheets_credentials.json
+**/sheets_credentials.json.json
 *.pem
 *.key
 *.crt
 secrets/
 credentials/
+service-account-*.json
+google-credentials*.json
 
 # ── Python ─────────────────────────────────────────────────────────
 __pycache__/
