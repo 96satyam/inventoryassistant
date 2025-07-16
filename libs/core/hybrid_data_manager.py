@@ -229,9 +229,39 @@ class HybridDataManager:
         logger.info("⏹️ Stopped background sync")
     
     def _normalize_inventory_data(self, data: pd.DataFrame) -> pd.DataFrame:
-        """Normalize Google Sheets data to match Excel format"""
-        # This ensures compatibility with existing code
-        # Add any necessary column name mappings here
+        """Normalize Google Sheets data to match Excel format and create proper inventory structure"""
+        if data.empty:
+            return data
+
+        # Normalize column names to match Excel format
+        data.columns = [col.strip().lower().replace(' ', '_').replace('.', '_') for col in data.columns]
+
+        # Map Google Sheets columns to expected format
+        column_mapping = {
+            'module_company': 'module_company',
+            'no__of_modules': 'no._of_modules',
+            'no_of_modules': 'no._of_modules',
+            'optimizers_company': 'optimizers_company',
+            'no__of_optimizers': 'no._of_optimizers',
+            'no_of_optimizers': 'no._of_optimizers',
+            'inverter_company': 'inverter_company',
+            'battery_company': 'battery_company',
+            'rails': 'rails',
+            'clamps': 'clamps',
+            'disconnects': 'disconnects',
+            'conduits': 'conduits'
+        }
+
+        # Rename columns according to mapping
+        data = data.rename(columns=column_mapping)
+
+        # Ensure numeric columns are properly converted
+        numeric_columns = ['no._of_modules', 'no._of_optimizers']
+        for col in numeric_columns:
+            if col in data.columns:
+                data[col] = pd.to_numeric(data[col], errors='coerce').fillna(0)
+
+        logger.info(f"📊 Normalized Google Sheets data: {len(data)} rows, columns: {list(data.columns)}")
         return data
     
     def get_data_source_status(self) -> Dict[str, Any]:

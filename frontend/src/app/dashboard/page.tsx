@@ -69,22 +69,12 @@ type InventoryRow = { name: string; available: number; required: number }
 type ForecastRow  = { model: string; qty: number }
 type LogEntry     = { timestamp: string; items: Record<string, number> }
 
-/* raw → normalised stock */
+/* raw → normalised stock - simplified for Google Sheets API data */
 const normaliseInventory = (raw: any[]): InventoryRow[] =>
   raw.map(r => ({
-    name: String(
-      r.name ?? r.model ?? r.module_company ?? r['Module Company'] ??
-      r.optimizers_company ?? r.inverter_company ?? r.battery_company ??
-      r.rails ?? r.clamps ?? r.disconnects ?? r.conduits ?? 'Unnamed Item'
-    ),
-    available: Number(
-      r.available ?? r.available_qty ?? r.in_stock ??
-      r['No. Of Modules'] ?? r.no_of_modules ?? r['no._of_modules'] ?? 0
-    ),
-    required: Number(
-      r.required ?? r.required_qty ?? r.demand ?? r.needed ??
-      r.target ?? r.minimum_stock ?? r.min_stock ?? 0
-    ),
+    name: String(r.name || r.module_company || r['Module Company'] || 'Unnamed Item'),
+    available: Number(r.available || r.no_of_modules || r['No. Of Modules'] || 0),
+    required: Number(r.required || r.no_of_optimizers || r['No. of Optimizers'] || 0),
   }))
 
 /* ========================================================= */
@@ -149,9 +139,9 @@ export default function DashboardPage() {
       console.log('� Live forecast data:', forecastData);
       console.log('📋 Live procurement logs:', logsData);
 
-      // Set data directly without complex normalization
+      // ✅ FIXED: Normalize inventory data to ensure correct format
       setStats(statsData);
-      setInv(inventoryData); // Already in correct format
+      setInv(normaliseInventory(inventoryData)); // Normalize to InventoryRow format
       setForecast(forecastData);
       setLogs(logsData); // Live procurement logs
 

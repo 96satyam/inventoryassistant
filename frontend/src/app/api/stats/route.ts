@@ -2,14 +2,55 @@ import { NextResponse } from 'next/server';
 
 export async function GET() {
   try {
-    console.log('📊 Dashboard API: Calculating live stats from Google Sheets data...');
-    
-    // Get live data from our new endpoints
+    console.log('📊 Frontend API: Fetching live Google Sheets stats from backend...');
+
+    // First try to get stats directly from backend (which now uses Google Sheets)
+    try {
+      const backendResponse = await fetch('http://127.0.0.1:8003/stats/', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache'
+        }
+      });
+
+      if (backendResponse.ok) {
+        const backendStats = await backendResponse.json();
+        console.log('✅ Got live Google Sheets stats from backend:', backendStats);
+
+        // Enhance backend stats with additional fields expected by frontend
+        const enhancedStats = {
+          total_skus: backendStats.total_skus || 0,
+          healthy_stock: backendStats.healthy_stock || 0,
+          low_stock: backendStats.low_stock || 0,
+          forecasted: backendStats.forecasted || 0,
+          efficiency: backendStats.efficiency || 0,
+          open_procurements: backendStats.open_procurements || 0,
+          next_shortfall: backendStats.next_shortfall || null,
+          source: 'live_google_sheets_backend',
+          last_updated: new Date().toISOString()
+        };
+
+        return NextResponse.json(enhancedStats, {
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0',
+            'X-Data-Source': 'live-google-sheets-backend'
+          }
+        });
+      }
+    } catch (backendError) {
+      console.warn('⚠️ Backend stats unavailable, calculating from live inventory data:', backendError);
+    }
+
+    // Fallback: Calculate stats from live inventory and forecast data
+    console.log('📊 Calculating stats from live Google Sheets data...');
     const [inventoryResponse, forecastResponse] = await Promise.all([
       fetch('http://localhost:3000/api/inventory'),
       fetch('http://localhost:3000/api/forecast')
     ]);
-    
+
     const inventoryData = await inventoryResponse.json();
     const forecastData = await forecastResponse.json();
     
@@ -74,7 +115,7 @@ export async function GET() {
       } : null,
       
       // Additional metadata
-      source: 'live_google_sheets',
+      source: 'live_google_sheets_calculation',
       last_updated: new Date().toISOString(),
       data_breakdown: {
         total_available: inventoryData.reduce((sum: number, item: any) => sum + (item.available || 0), 0),
@@ -91,7 +132,8 @@ export async function GET() {
       headers: {
         'Cache-Control': 'no-cache, no-store, must-revalidate',
         'Pragma': 'no-cache',
-        'Expires': '0'
+        'Expires': '0',
+        'X-Data-Source': 'live-google-sheets-calculation'
       }
     });
     

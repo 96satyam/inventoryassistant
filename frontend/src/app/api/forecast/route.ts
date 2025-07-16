@@ -2,9 +2,37 @@ import { NextResponse } from 'next/server';
 
 export async function GET() {
   try {
-    console.log('📈 Dashboard API: Generating forecast data from live inventory...');
-    
-    // Get live inventory data first
+    console.log('📈 Frontend API: Fetching live Google Sheets forecast data from backend...');
+
+    // First try to get forecast directly from backend (which now uses Google Sheets)
+    try {
+      const backendResponse = await fetch('http://127.0.0.1:8003/forecast/', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache'
+        }
+      });
+
+      if (backendResponse.ok) {
+        const backendForecast = await backendResponse.json();
+        console.log('✅ Got live Google Sheets forecast from backend:', backendForecast.length, 'items');
+
+        return NextResponse.json(backendForecast, {
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0',
+            'X-Data-Source': 'live-google-sheets-backend'
+          }
+        });
+      }
+    } catch (backendError) {
+      console.warn('⚠️ Backend forecast unavailable, generating from live inventory data:', backendError);
+    }
+
+    // Fallback: Generate forecast from live inventory data
+    console.log('📈 Generating forecast from live Google Sheets inventory data...');
     const inventoryResponse = await fetch('http://localhost:3000/api/inventory');
     const inventoryData = await inventoryResponse.json();
     
@@ -44,7 +72,7 @@ export async function GET() {
         urgency: currentStock < currentDemand ? 300 : 100, // Higher urgency if low stock
         is_urgent: currentStock < currentDemand,
         category: 'solar_component',
-        source: 'live_calculation',
+        source: 'live_google_sheets_calculation',
         based_on_stock: currentStock,
         based_on_demand: currentDemand
       };
@@ -60,14 +88,22 @@ export async function GET() {
       })
       .slice(0, 15); // Top 15 forecasted items
     
-    console.log('📈 Generated forecast data:', {
+    console.log('📈 Generated live Google Sheets forecast data:', {
       total_items: sortedForecast.length,
       total_forecasted: sortedForecast.reduce((sum, item) => sum + item.qty, 0),
       urgent_items: sortedForecast.filter(item => item.is_urgent).length,
-      sample_item: sortedForecast[0]
+      sample_item: sortedForecast[0],
+      data_source: 'live_google_sheets_calculation'
     });
-    
-    return NextResponse.json(sortedForecast);
+
+    return NextResponse.json(sortedForecast, {
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+        'X-Data-Source': 'live-google-sheets-calculation'
+      }
+    });
     
   } catch (error) {
     console.error('❌ Error generating forecast data:', error);

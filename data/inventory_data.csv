@@ -1,0 +1,11 @@
+Module Company,No. Of Modules,Optimizers Company,No. of Optimizers,Inverter Company,Battery Company,Rails,Clamps,Disconnects,Conduits
+Hanwa Cell,25,SOLAREDGE U650 POWER OPTIMIZER,11,SOLAREDGE USE3800H-USMNBL75,SOLAREDGE ENERGY BANK BAT-10K1P,UNIRAC UNIVERSAL SOLARHOOKS CT 5,NXT UMOUNT COMBO CLAMP,EATON DG221URB,3/4" EMT
+Maxeon 7 Series,10,SolarEdge P-Series,8,Enphase IQ7+ / IQ7A Microinverters,Tesla Powerwall 2,IronRidge,NXT UMOUNT™ COMBO CLAMP,Eaton DH Series,Schedule 40
+Q.TRON BLK M-G2,4,SolarEdge S-Series,6,Enphase IQ8 Series,Tesla Powerwall 3,IronRidge XR Rail,SolarMount® Clamps,HU36X Series,Schedule 80
+TOPHiKu6 Series,25,Tigo TS4-A-S,15,SolarEdge HD-Wave Inverter,Enphase IQ Battery 3,Dome 6.1 / S-Dome 6.1,IronRidge Universal End Clamps,DC Switch Disconnectors,3/4" EMT
+HiHero Series,54,Tigo TS4-X Series,20,Sunny Boy 3.0-US,Enphase IQ Battery 5P,RockIt Rail-Less System,SnapNrack Universal Mid Clamps,HU36X Series,Schedule 40
+HiHero Series,34,Huawei SUN2000-450W-P2,45,Sungrow SG-RS Series,LG RESU 10H,IronRidge,SnapNrack Universal End Clamps,Eaton DH Series,Schedule 80
+Alpha Pure Series,65,Huawei SUN2000-600W-P,23,Sungrow SGxxCX Series,LG RESU Prime 16H,SnapNrack Series 100 Rail,OneMid / OneEnd Clamps,EATON DG221URB,3/4" EMT
+Tiger Pro Series,34,Enphase IQ7+ / IQ7A,15,Growatt MOD TL3-X Series,SolarEdge Home Battery,UNIRAC UNIVERSAL SOLARHOOKS CT 5,SnapNrack Universal Mid Clamps,HU36X Series,3/4" EMT
+DeepBlue 4.0 X,150,Huawei SUN2000-600W-P,65,Sunny Boy 3.0-US,Enphase IQ Battery 5P,SnapNrack Series 100 Rail,OneMid / OneEnd Clamps,HU36X Series,Schedule 40
+Q.TRON BLK M-G2,40,SolarEdge S-Series,16,Enphase IQ8 Series,Tesla Powerwall 3,IronRidge XR Rail,SolarMount® Clamps,HU36X Series,3/4" EMT

@@ -2,17 +2,21 @@ import { NextResponse } from 'next/server';
 
 export async function GET() {
   try {
-    console.log('🔍 Sheets API: Fetching live inventory data from working backend endpoint...');
+    console.log('🔍 Sheets API: Fetching live Google Sheets data from backend...');
 
-    // Use the SAME working endpoint as the dashboard
-    const inventoryResponse = await fetch('http://127.0.0.1:8003/inventory/');
+    // Use the updated backend endpoint that now uses Google Sheets
+    const inventoryResponse = await fetch('http://127.0.0.1:8003/inventory/', {
+      headers: {
+        'Cache-Control': 'no-cache'
+      }
+    });
 
     if (!inventoryResponse.ok) {
       throw new Error(`Backend returned ${inventoryResponse.status}: ${inventoryResponse.statusText}`);
     }
 
     const inventoryData = await inventoryResponse.json();
-    console.log('✅ Got inventory data:', inventoryData.length, 'rows');
+    console.log('✅ Got live Google Sheets inventory data:', inventoryData.length, 'rows');
 
     // Try to get install history data from backend
     let installHistoryData = [];
@@ -30,7 +34,7 @@ export async function GET() {
       console.log('ℹ️ Install history: Using empty array (endpoint not implemented)');
     }
 
-    // Create a clean response with live data (using working backend data)
+    // Create a clean response with live Google Sheets data
     const liveData = {
       connected: true, // We know it's connected since we got data
       sheet_id: '1aBW1vma8eF1iNzo5_aB3S2a_a7zS4Tp1vWXncvrASls',
@@ -39,12 +43,14 @@ export async function GET() {
         inventory: inventoryData,
         install_history: installHistoryData,
         live_data: true,
+        source: 'live_google_sheets',
         last_updated: new Date().toISOString()
       },
       sync_status: {
         last_sync: new Date().toISOString(),
-        status: 'connected',
-        auto_sync: true
+        status: 'connected_google_sheets',
+        auto_sync: true,
+        real_time: true
       }
     };
 
@@ -52,7 +58,7 @@ export async function GET() {
       inventory_rows: inventoryData.length,
       history_rows: installHistoryData.length,
       connected: liveData.connected,
-      source: 'working_backend_endpoint'
+      source: 'live_google_sheets_backend'
     });
 
     return NextResponse.json(liveData);

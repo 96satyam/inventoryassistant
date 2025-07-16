@@ -1,0 +1,30 @@
+{
+  "last_scrape": "2025-07-16T10:30:37.869252",
+  "scrape_status": "success",
+  "data_summary": {
+    "inventory_rows": 10,
+    "history_rows": 15,
+    "total_rows": 25
+  },
+  "changes": {
+    "inventory": {
+      "timestamp": "2025-07-16T10:30:37.831216",
+      "data_type": "inventory",
+      "changes_detected": true,
+      "summary": {
+        "first_scrape": true
+      },
+      "row_count_change": 0
+    },
+    "history": {
+      "timestamp": "2025-07-16T10:30:37.831216",
+      "data_type": "install_history",
+      "changes_detected": true,
+      "summary": {
+        "first_scrape": true
+      },
+      "row_count_change": 0
+    }
+  },
+  "next_scheduled_scrape": "09:00 tomorrow"
+}

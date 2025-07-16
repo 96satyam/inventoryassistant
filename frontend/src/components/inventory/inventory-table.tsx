@@ -53,246 +53,31 @@ export default function InventoryTable() {
       console.log('📦 Inventory Checker: Raw data from API:', json)
       console.log('📦 Sample row structure:', json[0])
 
-      // Transform each row into individual component items using REAL data
-      // ✅ FIXED: Removed Math.random() that was causing data fluctuation
-      // ✅ FIXED: Added deduplication to prevent duplicate component entries
-      // ✅ FIXED: Added name normalization to handle similar component names
-      // Now using actual data from Inventry.xlsx for consistent values
-      const componentMap = new Map<string, ComponentItem>()
+      // ✅ SIMPLIFIED: Use the data as-is from the API (already processed by backend)
+      // The backend now provides clean, normalized data from Google Sheets
+      const components: ComponentItem[] = json.map((row: any, index: number) => {
+        // Use the standardized field names from the API
+        const name = row.name || row.module_company || row['Module Company'] || `Item ${index + 1}`
+        const available = Number(row.available || row.no_of_modules || row['No. Of Modules'] || 0)
+        const required = Number(row.required || row.no_of_optimizers || row['No. of Optimizers'] || 0)
 
-      // Helper function to normalize component names for better deduplication
-      const normalizeComponentName = (name: string): string => {
-        return name
-          .trim()
-          .replace(/™/g, '') // Remove trademark symbols
-          .replace(/®/g, '') // Remove registered symbols
-          .replace(/\s+/g, ' ') // Normalize whitespace
-          .toLowerCase()
-      }
-
-      json.forEach((row: any) => {
-        // Use real data from Excel file instead of random numbers
-        // Process modules - handle both Google Sheets and Excel formats
-        const moduleCompany = row['Module Company'] || row.module_company || row.name
-        const moduleCount = Number(row['No. Of Modules'] || row["no._of_modules"] || row.available) || 0
-
-        console.log(`🔍 Row processing:`, {
-          moduleCompany,
-          moduleCount,
-          rawRow: row
-        })
-
-        if (moduleCompany && moduleCompany.trim()) {
-          const originalName = moduleCompany.trim()
-          const normalizedKey = normalizeComponentName(originalName)
-          const available = moduleCount
-          const required = Math.ceil(available * 1.2) // 20% buffer for required
-
-          console.log(`  📋 Module: ${originalName} = ${available}/${required}`)
-
-          if (componentMap.has(normalizedKey)) {
-            // Sum quantities if component already exists
-            const existing = componentMap.get(normalizedKey)!
-            componentMap.set(normalizedKey, {
-              name: existing.name, // Keep the first name encountered
-              available: existing.available + available,
-              required: existing.required + required,
-            })
-          } else {
-            componentMap.set(normalizedKey, { name: originalName, available, required })
-          }
+        return {
+          name: name.toString().trim(),
+          available,
+          required
         }
+      }).filter(item => item.name && item.name !== 'Item 0') // Remove empty items
 
-        // Process optimizers - handle both Google Sheets and Excel formats
-        const optimizersCompany = row['Optimizers Company'] || row.optimizers_company
-        const optimizersCount = Number(row['No. of Optimizers'] || row["no._of_optimizers"] || row.required) || 0
-
-        if (optimizersCompany && optimizersCompany.trim()) {
-          const originalName = optimizersCompany.trim()
-          const normalizedKey = normalizeComponentName(originalName)
-          const available = optimizersCount
-          const required = Math.ceil(available * 1.1) // 10% buffer for required
-
-          if (componentMap.has(normalizedKey)) {
-            const existing = componentMap.get(normalizedKey)!
-            componentMap.set(normalizedKey, {
-              name: existing.name, // Keep the first name encountered
-              available: existing.available + available,
-              required: existing.required + required,
-            })
-          } else {
-            componentMap.set(normalizedKey, { name: originalName, available, required })
-          }
-        }
-
-        // Process inverters - handle both Google Sheets and Excel formats
-        const inverterCompany = row['Inverter Company'] || row.inverter_company
-
-        if (inverterCompany && inverterCompany.trim()) {
-          const originalName = inverterCompany.trim()
-          const normalizedKey = normalizeComponentName(originalName)
-          const available = 1 // Inverters typically have 1 unit available per installation
-          const required = 1
-
-          if (componentMap.has(normalizedKey)) {
-            const existing = componentMap.get(normalizedKey)!
-            componentMap.set(normalizedKey, {
-              name: existing.name, // Keep the first name encountered
-              available: existing.available + available,
-              required: existing.required + required,
-            })
-          } else {
-            componentMap.set(normalizedKey, { name: originalName, available, required })
-          }
-        }
-
-        // Process batteries - handle both Google Sheets and Excel formats
-        const batteryCompany = row['Battery Company'] || row.battery_company
-
-        if (batteryCompany && batteryCompany.trim()) {
-          const originalName = batteryCompany.trim()
-          const normalizedKey = normalizeComponentName(originalName)
-          const available = 1 // Batteries typically have 1 unit available per installation
-          const required = 1
-
-          if (componentMap.has(normalizedKey)) {
-            const existing = componentMap.get(normalizedKey)!
-            componentMap.set(normalizedKey, {
-              name: existing.name, // Keep the first name encountered
-              available: existing.available + available,
-              required: existing.required + required,
-            })
-          } else {
-            componentMap.set(normalizedKey, { name: originalName, available, required })
-          }
-        }
-
-        // Process rails - handle both Google Sheets and Excel formats
-        const rails = row['Rails'] || row.rails
-
-        if (rails && rails.trim()) {
-          const originalName = rails.trim()
-          const normalizedKey = normalizeComponentName(originalName)
-          const available = Math.floor(moduleCount * 0.8) || 10 // Rails based on module count
-          const required = Math.floor(moduleCount * 0.6) || 8
-
-          if (componentMap.has(normalizedKey)) {
-            const existing = componentMap.get(normalizedKey)!
-            componentMap.set(normalizedKey, {
-              name: existing.name, // Keep the first name encountered
-              available: existing.available + available,
-              required: existing.required + required,
-            })
-          } else {
-            componentMap.set(normalizedKey, { name: originalName, available, required })
-          }
-        }
-
-        // Process clamps - handle both Google Sheets and Excel formats
-        const clamps = row['Clamps'] || row.clamps
-
-        if (clamps && clamps.trim()) {
-          const originalName = clamps.trim()
-          const normalizedKey = normalizeComponentName(originalName)
-          const available = Math.floor(moduleCount * 1.5) || 20 // Clamps based on module count
-          const required = Math.floor(moduleCount * 1.2) || 15
-
-          if (componentMap.has(normalizedKey)) {
-            const existing = componentMap.get(normalizedKey)!
-            componentMap.set(normalizedKey, {
-              name: existing.name, // Keep the first name encountered
-              available: existing.available + available,
-              required: existing.required + required,
-            })
-          } else {
-            componentMap.set(normalizedKey, { name: originalName, available, required })
-          }
-        }
-
-        // Process disconnects - handle both Google Sheets and Excel formats
-        const disconnects = row['Disconnects'] || row.disconnects
-
-        if (disconnects && disconnects.trim()) {
-          const originalName = disconnects.trim()
-          const normalizedKey = normalizeComponentName(originalName)
-          const available = Math.floor(moduleCount * 0.4) || 5 // Disconnects based on module count
-          const required = Math.floor(moduleCount * 0.3) || 3
-
-          if (componentMap.has(normalizedKey)) {
-            const existing = componentMap.get(normalizedKey)!
-            componentMap.set(normalizedKey, {
-              name: existing.name, // Keep the first name encountered
-              available: existing.available + available,
-              required: existing.required + required,
-            })
-          } else {
-            componentMap.set(normalizedKey, { name: originalName, available, required })
-          }
-        }
-
-        // Process conduits - handle both Google Sheets and Excel formats
-        const conduits = row['Conduits'] || row.conduits
-
-        if (conduits && conduits.trim()) {
-          const originalName = conduits.trim()
-          const normalizedKey = normalizeComponentName(originalName)
-          const available = Math.floor(moduleCount * 0.6) || 8 // Conduits based on module count
-          const required = Math.floor(moduleCount * 0.5) || 6
-
-          if (componentMap.has(normalizedKey)) {
-            const existing = componentMap.get(normalizedKey)!
-            componentMap.set(normalizedKey, {
-              name: existing.name, // Keep the first name encountered
-              available: existing.available + available,
-              required: existing.required + required,
-            })
-          } else {
-            componentMap.set(normalizedKey, { name: originalName, available, required })
-          }
-        }
+      console.log('📦 Inventory Checker: Processed components:', {
+        totalItems: components.length,
+        sampleItems: components.slice(0, 3),
+        dataSource: 'live_google_sheets_api'
       })
 
-      // Convert Map to Array and remove duplicates
-      const components: ComponentItem[] = Array.from(componentMap.values())
-
-      // Debug logging for deduplication with normalization
-      console.log('📦 Inventory Deduplication Results (Enhanced):', {
-        rawRows: json.length,
-        totalComponentsBeforeDedup: json.length * 8, // Approximate
-        uniqueComponentsAfterDedup: components.length,
-        componentNames: components.map(c => c.name).slice(0, 10), // First 10 names
-        duplicatesRemoved: (json.length * 8) - components.length,
-        sampleComponents: components.slice(0, 5).map(c => ({
-          name: c.name,
-          normalizedKey: normalizeComponentName(c.name),
-          available: c.available,
-          required: c.required
-        }))
-      })
-
-      // Check for any remaining duplicates in final array (by original name)
-      const finalNames = components.map(c => c.name)
-      const uniqueNames = [...new Set(finalNames)]
-      if (finalNames.length !== uniqueNames.length) {
-        console.error('🚨 DUPLICATES STILL EXIST in final array!', {
-          totalComponents: finalNames.length,
-          uniqueNames: uniqueNames.length,
-          duplicateNames: finalNames.filter((name, index) => finalNames.indexOf(name) !== index)
-        })
-      } else {
-        console.log('✅ No duplicates in final component array')
-      }
-
-      // Check for similar names that might need normalization
-      const normalizedNames = components.map(c => normalizeComponentName(c.name))
-      const uniqueNormalizedNames = [...new Set(normalizedNames)]
-      console.log('🔍 Normalization check:', {
-        originalUniqueCount: uniqueNames.length,
-        normalizedUniqueCount: uniqueNormalizedNames.length,
-        normalizationEffective: uniqueNames.length > uniqueNormalizedNames.length
-      })
-
+      // ✅ SIMPLIFIED: Use the data directly from API (already processed by backend)
       setData(components)
+
+
     } catch (err) {
       console.error("❌ Failed to fetch inventory", err)
       // Set some mock data for development

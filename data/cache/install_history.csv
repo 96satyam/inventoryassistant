@@ -1,0 +1,16 @@
+Date,Module Model,Module Qty,Optimizer Model,Optimizer Qty,Inverter Model,Battery Model
+2025-04-01,Hanwa Qcell,10,SOLAREDGE U650 POWER OPTIMIZER,19,SOLAREDGE USE3800H-USMNBL75,LG RESU 10H Prime
+2025-04-05,Maxeon 7 Series,17,SolarEdge P-Series,10,Enphase IQ7+ / IQ7A Microinverters,SOLAREDGE ENERGY BANK BAT-10K1P
+2025-04-09,TOPHiKu6 Series,12,Tigo TS4-A-S,17,SolarEdge HD-Wave Inverter,Enphase IQ Battery 5P
+2025-04-13,Hanwa Qcell,10,SOLAREDGE U650 POWER OPTIMIZER,9,SOLAREDGE USE3800H-USMNBL75,Tesla Powerwall 3
+2025-04-17,Maxeon 7 Series,10,SolarEdge P-Series,16,Enphase IQ7+ / IQ7A Microinverters,Tesla Powerwall 3
+2025-04-21,TOPHiKu6 Series,23,Tigo TS4-A-S,11,SolarEdge HD-Wave Inverter,Enphase IQ Battery 5P
+2025-04-25,TOPHiKu6 Series,18,Tigo TS4-A-S,20,SolarEdge HD-Wave Inverter,SOLAREDGE ENERGY BANK BAT-10K1P
+2025-04-29,Maxeon 7 Series,23,SolarEdge P-Series,13,Enphase IQ7+ / IQ7A Microinverters,LG RESU 10H Prime
+2025-05-03,Maxeon 7 Series,16,SolarEdge P-Series,20,Enphase IQ7+ / IQ7A Microinverters,LG RESU 10H Prime
+2025-05-07,Hanwa Qcell,12,SOLAREDGE U650 POWER OPTIMIZER,14,SOLAREDGE USE3800H-USMNBL75,SOLAREDGE ENERGY BANK BAT-10K1P
+2025-05-11,Q.TRON BLK M-G2,21,SolarEdge S-Series,17,Enphase IQ8 Series,LG RESU 10H Prime
+2025-05-15,Hanwa Qcell,24,SOLAREDGE U650 POWER OPTIMIZER,16,SOLAREDGE USE3800H-USMNBL75,SOLAREDGE ENERGY BANK BAT-10K1P
+2025-05-19,Q.PEAK DUO XL-G9.2 Series,12,Tigo TS4-A-O,16,SolarEdge Home Hub Inverter,LG RESU 10H Prime
+2025-05-23,TOPHiKu6 Series,21,Tigo TS4-A-S,17,SolarEdge HD-Wave Inverter,Tesla Powerwall 3
+2025-05-27,Hanwa Qcell,11,SOLAREDGE U650 POWER OPTIMIZER,18,SOLAREDGE USE3800H-USMNBL75,Tesla Powerwall 3
