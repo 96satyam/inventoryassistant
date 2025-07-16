@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staging API Connectivity Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Staging API Connectivity Test</h1>
+    
+    <div class="test-section info">
+        <h3>🌐 Test Basic Connectivity</h3>
+        <button onclick="testBasicConnectivity()">Test Basic Connection</button>
+        <div id="connectivityResult"></div>
+    </div>
+    
+    <div class="test-section info">
+        <h3>🔐 Test Login Endpoint</h3>
+        <button onclick="testLoginEndpoint()">Test Login Endpoint</button>
+        <div id="loginEndpointResult"></div>
+    </div>
+    
+    <div class="test-section info">
+        <h3>🧪 Test CORS Headers</h3>
+        <button onclick="testCorsHeaders()">Test CORS Headers</button>
+        <div id="corsResult"></div>
+    </div>
+    
+    <div class="test-section info">
+        <h3>📡 Test with Different Methods</h3>
+        <button onclick="testDifferentMethods()">Test Different HTTP Methods</button>
+        <div id="methodsResult"></div>
+    </div>
+
+    <script>
+        const STAGING_URL = 'https://staging.framesense.ai';
+        const LOGIN_ENDPOINT = '/api/auth/login';
+        
+        async function testBasicConnectivity() {
+            const resultDiv = document.getElementById('connectivityResult');
+            resultDiv.innerHTML = '<p>🔄 Testing basic connectivity...</p>';
+            
+            try {
+                console.log('Testing basic connectivity to:', STAGING_URL);
+                
+                // Test basic fetch to root
+                const response = await fetch(STAGING_URL, {
+                    method: 'GET',
+                    mode: 'cors'
+                });
+                
+                resultDiv.innerHTML = `
+                    <div class="success">
+                        <h4>✅ Basic Connectivity Success</h4>
+                        <p><strong>Status:</strong> ${response.status}</p>
+                        <p><strong>Status Text:</strong> ${response.statusText}</p>
+                        <p><strong>Headers:</strong></p>
+                        <pre>${JSON.stringify(Object.fromEntries(response.headers.entries()), null, 2)}</pre>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Basic connectivity error:', error);
+                
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <h4>❌ Basic Connectivity Failed</h4>
+                        <p><strong>Error:</strong> ${error.message}</p>
+                        <p><strong>Error Type:</strong> ${error.name}</p>
+                        <p>This could indicate:</p>
+                        <ul>
+                            <li>CORS policy blocking the request</li>
+                            <li>Network connectivity issues</li>
+                            <li>Server is down or unreachable</li>
+                            <li>DNS resolution problems</li>
+                        </ul>
+                    </div>
+                `;
+            }
+        }
+        
+        async function testLoginEndpoint() {
+            const resultDiv = document.getElementById('loginEndpointResult');
+            resultDiv.innerHTML = '<p>🔄 Testing login endpoint...</p>';
+            
+            try {
+                console.log('Testing login endpoint:', `${STAGING_URL}${LOGIN_ENDPOINT}`);
+                
+                const response = await fetch(`${STAGING_URL}${LOGIN_ENDPOINT}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: 'satyam1@wattmonk.com',
+                        password: 'Password123'
+                    })
+                });
+                
+                const data = await response.json().catch(() => ({}));
+                
+                resultDiv.innerHTML = `
+                    <div class="${response.ok ? 'success' : 'error'}">
+                        <h4>${response.ok ? '✅' : '❌'} Login Endpoint Test</h4>
+                        <p><strong>Status:</strong> ${response.status}</p>
+                        <p><strong>Status Text:</strong> ${response.statusText}</p>
+                        <p><strong>Response:</strong></p>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                        <p><strong>Headers:</strong></p>
+                        <pre>${JSON.stringify(Object.fromEntries(response.headers.entries()), null, 2)}</pre>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Login endpoint error:', error);
+                
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <h4>❌ Login Endpoint Failed</h4>
+                        <p><strong>Error:</strong> ${error.message}</p>
+                        <p><strong>Error Type:</strong> ${error.name}</p>
+                        <p>Possible causes:</p>
+                        <ul>
+                            <li>CORS policy blocking POST requests</li>
+                            <li>Endpoint doesn't exist</li>
+                            <li>Server configuration issues</li>
+                            <li>Authentication endpoint not properly configured</li>
+                        </ul>
+                    </div>
+                `;
+            }
+        }
+        
+        async function testCorsHeaders() {
+            const resultDiv = document.getElementById('corsResult');
+            resultDiv.innerHTML = '<p>🔄 Testing CORS headers...</p>';
+            
+            try {
+                console.log('Testing CORS with OPTIONS request');
+                
+                const response = await fetch(`${STAGING_URL}${LOGIN_ENDPOINT}`, {
+                    method: 'OPTIONS',
+                    headers: {
+                        'Origin': window.location.origin,
+                        'Access-Control-Request-Method': 'POST',
+                        'Access-Control-Request-Headers': 'Content-Type, Accept'
+                    }
+                });
+                
+                const corsHeaders = {
+                    'Access-Control-Allow-Origin': response.headers.get('Access-Control-Allow-Origin'),
+                    'Access-Control-Allow-Methods': response.headers.get('Access-Control-Allow-Methods'),
+                    'Access-Control-Allow-Headers': response.headers.get('Access-Control-Allow-Headers'),
+                    'Access-Control-Allow-Credentials': response.headers.get('Access-Control-Allow-Credentials')
+                };
+                
+                resultDiv.innerHTML = `
+                    <div class="${response.ok ? 'success' : 'error'}">
+                        <h4>${response.ok ? '✅' : '❌'} CORS Headers Test</h4>
+                        <p><strong>Status:</strong> ${response.status}</p>
+                        <p><strong>CORS Headers:</strong></p>
+                        <pre>${JSON.stringify(corsHeaders, null, 2)}</pre>
+                        <p><strong>Analysis:</strong></p>
+                        <ul>
+                            <li>Allow-Origin: ${corsHeaders['Access-Control-Allow-Origin'] || 'Not set'}</li>
+                            <li>Allow-Methods: ${corsHeaders['Access-Control-Allow-Methods'] || 'Not set'}</li>
+                            <li>Allow-Headers: ${corsHeaders['Access-Control-Allow-Headers'] || 'Not set'}</li>
+                        </ul>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('CORS test error:', error);
+                
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <h4>❌ CORS Test Failed</h4>
+                        <p><strong>Error:</strong> ${error.message}</p>
+                        <p>This indicates CORS is likely blocking the request.</p>
+                    </div>
+                `;
+            }
+        }
+        
+        async function testDifferentMethods() {
+            const resultDiv = document.getElementById('methodsResult');
+            resultDiv.innerHTML = '<p>🔄 Testing different HTTP methods...</p>';
+            
+            const methods = ['GET', 'POST', 'OPTIONS'];
+            const results = [];
+            
+            for (const method of methods) {
+                try {
+                    console.log(`Testing ${method} method`);
+                    
+                    const options = {
+                        method: method,
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                        }
+                    };
+                    
+                    if (method === 'POST') {
+                        options.body = JSON.stringify({
+                            email: 'test@test.com',
+                            password: 'test123'
+                        });
+                    }
+                    
+                    const response = await fetch(`${STAGING_URL}${LOGIN_ENDPOINT}`, options);
+                    
+                    results.push({
+                        method: method,
+                        status: response.status,
+                        statusText: response.statusText,
+                        success: true
+                    });
+                } catch (error) {
+                    results.push({
+                        method: method,
+                        error: error.message,
+                        success: false
+                    });
+                }
+            }
+            
+            let html = '<h4>📊 HTTP Methods Test Results</h4>';
+            results.forEach(result => {
+                const statusClass = result.success ? 'success' : 'error';
+                const statusIcon = result.success ? '✅' : '❌';
+                
+                html += `
+                    <div class="${statusClass}" style="margin: 10px 0; padding: 10px;">
+                        <h5>${statusIcon} ${result.method} Method</h5>
+                        ${result.success ? 
+                            `<p>Status: ${result.status} ${result.statusText}</p>` :
+                            `<p>Error: ${result.error}</p>`
+                        }
+                    </div>
+                `;
+            });
+            
+            resultDiv.innerHTML = html;
+        }
+        
+        // Auto-run basic connectivity test on page load
+        window.onload = function() {
+            console.log('🚀 Staging API Connectivity Test Tool loaded');
+            console.log('Testing connectivity to:', STAGING_URL);
+        };
+    </script>
+</body>
+</html>

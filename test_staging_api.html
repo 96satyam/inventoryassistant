@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staging API Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        input { padding: 8px; margin: 5px; width: 250px; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Staging API Test Tool</h1>
+    
+    <div class="test-section info">
+        <h3>🔐 Test Staging Login API</h3>
+        <div>
+            <input type="email" id="testEmail" placeholder="Enter email" value="satyam1@wattmonk.com">
+            <input type="password" id="testPassword" placeholder="Enter password" value="Password123">
+            <button onclick="testStagingLogin()">Test Staging Login</button>
+        </div>
+        <div id="loginResult"></div>
+    </div>
+    
+    <div class="test-section info">
+        <h3>📊 Test Auth State Storage</h3>
+        <button onclick="testAuthStateStorage()">Test Auth State Storage</button>
+        <div id="authStateResult"></div>
+    </div>
+    
+    <div class="test-section info">
+        <h3>🧹 Clear All Storage</h3>
+        <button onclick="clearAllStorage()">Clear All Storage</button>
+        <div id="clearResult"></div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'https://staging.framesense.ai';
+        
+        async function testStagingLogin() {
+            const email = document.getElementById('testEmail').value;
+            const password = document.getElementById('testPassword').value;
+            const resultDiv = document.getElementById('loginResult');
+            
+            resultDiv.innerHTML = '<p>🔄 Testing staging login API...</p>';
+            
+            try {
+                console.log('🔐 Testing staging API login...');
+                console.log('📧 Email:', email);
+                console.log('🌐 API URL:', `${API_BASE_URL}/api/auth/login`);
+                
+                const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                console.log('📡 Response status:', response.status);
+                
+                if (response.ok) {
+                    const userData = await response.json();
+                    console.log('✅ API Success:', userData);
+                    
+                    // Test the exact same logic as the login page
+                    const authToken = userData.tokens && typeof userData.tokens === 'string' 
+                        ? userData.tokens 
+                        : `auth_${userData._id}_${Date.now()}`;
+                    
+                    // Store data exactly like the login page
+                    localStorage.setItem('user', JSON.stringify(userData));
+                    localStorage.setItem('authToken', authToken);
+                    
+                    const authState = {
+                        isAuthenticated: true,
+                        isLoading: false
+                    };
+                    
+                    const userForAuth = {
+                        username: userData.email || userData.name || 'user',
+                        name: userData.name || 'User',
+                        email: userData.email || '',
+                        role: userData.roles?.[0] || 'user',
+                        permissions: ['dashboard', 'inventory', 'procurement', 'forecast', 'activity']
+                    };
+                    
+                    sessionStorage.setItem('authState', JSON.stringify(authState));
+                    sessionStorage.setItem('userData', JSON.stringify(userForAuth));
+                    
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            <h4>✅ Staging Login Successful</h4>
+                            <p><strong>Status:</strong> ${response.status}</p>
+                            <p><strong>User:</strong> ${userData.name} (${userData.email})</p>
+                            <p><strong>Role:</strong> ${userData.roles?.[0] || 'user'}</p>
+                            <p><strong>Auth Token:</strong> ${authToken}</p>
+                            
+                            <h5>📦 Raw API Response:</h5>
+                            <pre>${JSON.stringify(userData, null, 2)}</pre>
+                            
+                            <h5>💾 Stored Auth State:</h5>
+                            <pre>${JSON.stringify(authState, null, 2)}</pre>
+                            
+                            <h5>👤 Stored User Data:</h5>
+                            <pre>${JSON.stringify(userForAuth, null, 2)}</pre>
+                        </div>
+                    `;
+                } else {
+                    const errorData = await response.json().catch(() => ({}));
+                    console.error('❌ API Error:', errorData);
+                    
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            <h4>❌ Staging Login Failed</h4>
+                            <p><strong>Status:</strong> ${response.status}</p>
+                            <p><strong>Error:</strong> ${errorData.message || 'Unknown error'}</p>
+                            <pre>${JSON.stringify(errorData, null, 2)}</pre>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('❌ Network Error:', error);
+                
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <h4>❌ Network Error</h4>
+                        <p><strong>Error:</strong> ${error.message}</p>
+                        <p>This could be a CORS issue or network connectivity problem.</p>
+                    </div>
+                `;
+            }
+        }
+        
+        function testAuthStateStorage() {
+            const resultDiv = document.getElementById('authStateResult');
+            
+            try {
+                // Check what's stored
+                const authState = sessionStorage.getItem('authState');
+                const userData = sessionStorage.getItem('userData');
+                const user = localStorage.getItem('user');
+                const authToken = localStorage.getItem('authToken');
+                
+                let authStateObj = null;
+                let userDataObj = null;
+                
+                try {
+                    authStateObj = authState ? JSON.parse(authState) : null;
+                    userDataObj = userData ? JSON.parse(userData) : null;
+                } catch (parseError) {
+                    console.error('Parse error:', parseError);
+                }
+                
+                const isAuthenticated = authStateObj?.isAuthenticated === true;
+                
+                resultDiv.innerHTML = `
+                    <div class="${isAuthenticated ? 'success' : 'error'}">
+                        <h4>${isAuthenticated ? '✅' : '❌'} Auth State Check</h4>
+                        <p><strong>Is Authenticated:</strong> ${isAuthenticated}</p>
+                        
+                        <h5>📊 Storage Status:</h5>
+                        <p>sessionStorage.authState: ${authState ? '✅ Present' : '❌ Missing'}</p>
+                        <p>sessionStorage.userData: ${userData ? '✅ Present' : '❌ Missing'}</p>
+                        <p>localStorage.user: ${user ? '✅ Present' : '❌ Missing'}</p>
+                        <p>localStorage.authToken: ${authToken ? '✅ Present' : '❌ Missing'}</p>
+                        
+                        ${authStateObj ? `
+                        <h5>🔐 Auth State:</h5>
+                        <pre>${JSON.stringify(authStateObj, null, 2)}</pre>
+                        ` : ''}
+                        
+                        ${userDataObj ? `
+                        <h5>👤 User Data:</h5>
+                        <pre>${JSON.stringify(userDataObj, null, 2)}</pre>
+                        ` : ''}
+                        
+                        <h5>🎯 Dashboard Redirect Test:</h5>
+                        <p>If authenticated, you should be able to navigate to dashboard.</p>
+                        ${isAuthenticated ? 
+                            '<button onclick="window.open(\'/dashboard\', \'_blank\')">🔗 Test Dashboard Access</button>' :
+                            '<p style="color: red;">❌ Not authenticated - dashboard access will fail</p>'
+                        }
+                    </div>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <h4>❌ Error Checking Auth State</h4>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        function clearAllStorage() {
+            const resultDiv = document.getElementById('clearResult');
+            
+            try {
+                localStorage.clear();
+                sessionStorage.clear();
+                
+                resultDiv.innerHTML = `
+                    <div class="success">
+                        <h4>✅ Storage Cleared</h4>
+                        <p>All localStorage and sessionStorage data has been cleared.</p>
+                    </div>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <h4>❌ Error Clearing Storage</h4>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // Auto-check auth state on page load
+        window.onload = function() {
+            console.log('🚀 Staging API Test Tool loaded');
+            testAuthStateStorage();
+        };
+    </script>
+</body>
+</html>
